@@ -1,16 +1,33 @@
 // models/User.js
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
 });
 
-UserSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) return next();
-    this.password = await bcrypt.hash(this.password, 10);
-    next();
+UserSchema.pre('save', function(next) {
+    let user = this;
+
+    if (!user.isModified('password')) {
+        return next();
+    } else {
+    }
+
+    bcrypt
+        .genSalt(12)
+        .then((salt) => {
+            return bcrypt.hash(user.password, salt);
+        })
+        .then((hash) => {
+            user.password = hash;
+            next();
+        })
+        .catch((err) => {
+            console.log(err);
+            next(err);
+        });
 });
 
 const User = mongoose.model('User', UserSchema);

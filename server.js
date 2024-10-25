@@ -1,44 +1,45 @@
-// server.js
 const express = require('express');
 const mongoose = require('mongoose');
+const dotenv = require('dotenv');
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const connectDB = require('./config/db');
+const authRoutes = require('./routes/auth');
+
+dotenv.config();
+
+// Connect to MongoDB
+connectDB();
 
 const app = express();
-
-const authRoutes = require('./routes/auth');
-app.use('/api/auth', authRoutes);
-const PORT = process.env.PORT || 3000;
-
-// Middleware
 app.use(express.json());
 
-// Swagger configuration
+// Swagger documentation setup
 const swaggerOptions = {
     swaggerDefinition: {
         openapi: '3.0.0',
         info: {
-            title: 'User Auth API',
+            title: 'Express Auth API',
             version: '1.0.0',
-            description: 'API for user login and registration',
+            description: 'API for user authentication with Express and MongoDB',
         },
+        servers: [
+            {
+                url: 'http://localhost:5000',
+            },
+        ],
     },
-    apis: ['./routes/*.js'], // Path to the API docs
+    apis: ['./routes/*.js'],
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
-
-mongoose.connect('mongodb://localhost:27017/yourdbname', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-}).then(() => {
-    console.log('MongoDB connected');
-}).catch(err => {
-    console.error('MongoDB connection error:', err);
-});
-
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
+// Routes
+app.use('/api/auth', authRoutes);
+
+// Start the server
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
