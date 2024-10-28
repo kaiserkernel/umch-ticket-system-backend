@@ -6,7 +6,7 @@ const UserSchema = new mongoose.Schema({
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    role: { type: String, enum: ['student', 'admin', 'teacher'], required: true },
+    role: { type: Number, enum: [0, 1, 2], required: true }, // 0: admin, 1: teacher, 2: student
     enrollmentNumber: { type: String, required: function() { return this.role === 'student'; } },
     firstYearOfStudy: { type: String, required: function() { return this.role === 'student'; } },
     avatar: { type: String }, 
