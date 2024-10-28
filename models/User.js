@@ -3,8 +3,15 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
 const UserSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true },
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    role: { type: String, enum: ['student', 'admin', 'teacher'], required: true },
+    enrollmentNumber: { type: String, required: function() { return this.role === 'student'; } },
+    firstYearOfStudy: { type: String, required: function() { return this.role === 'student'; } },
+    avatar: { type: String }, 
     password: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now },
 });
 
 UserSchema.pre('save', function(next) {
