@@ -5,6 +5,7 @@ const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
+const formRoutes = require('./routes/form');
 
 dotenv.config();
 
@@ -37,6 +38,8 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/form', formRoutes);
+
 
 // Start the server
 const PORT = process.env.PORT || 5000;
