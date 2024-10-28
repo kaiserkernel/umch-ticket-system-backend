@@ -20,37 +20,37 @@ const router = express.Router();
  *       properties:
  *         firstName:
  *           type: string
- *           description: The user's first name
+ *           description: "The user's first name"
  *         lastName:
  *           type: string
- *           description: The user's last name
+ *           description: "The user's last name"
  *         email:
  *           type: string
- *           description: The user's email address
+ *           description: "The user's email address"
  *         password:
  *           type: string
- *           description: The user's password
+ *           description: "The user's password"
  *         role:
- *           type: string
- *           description: The user's role (admin, teacher, student)
+ *           type: number
+ *           description: "The user's role (0 for admin, 1 for teacher, 2 for student)"
  *         enrollmentNumber:
  *           type: string
- *           description: The student's enrollment number (only for students)
+ *           description: "The student's enrollment number (only for students)"
  *         firstYearOfStudy:
  *           type: string
- *           description: The first year of study (only for students)
+ *           description: "The first year of study (only for students)"
  *         avatar:
  *           type: string
- *           description: URL to the user's avatar
+ *           description: "URL to the user's avatar"
  *       example:
  *         firstName: John
  *         lastName: Doe
  *         email: john.doe@example.com
  *         password: password123
- *         role: student
+ *         role: 2
  *         enrollmentNumber: EN12345
  *         firstYearOfStudy: 2023
- *         avatar: /uploads/avatar.jpg
+ *         avatar: /uploads/images/avatar/avatar.jpg
  */
 
 /**
@@ -75,7 +75,7 @@ const router = express.Router();
  *               password:
  *                 type: string
  *               role:
- *                 type: string
+ *                 type: integer
  *               enrollmentNumber:
  *                 type: string
  *               firstYearOfStudy:
