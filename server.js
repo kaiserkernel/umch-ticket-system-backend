@@ -17,10 +17,11 @@ const app = express();
 const corsOptions = {
   origin: '*', // Specify origin if needed (e.g., 'http://localhost:3000')
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'multipart/form-data'],
-  credentials: false, // Use true if sending cookies or auth headers is necessary
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  credentials: true, // Use true if sending cookies or auth headers is necessary
 };
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle preflight requests
 
 app.use(express.json());
 
