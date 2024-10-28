@@ -1,6 +1,57 @@
+// routes/authRoutes.js
 const express = require('express');
 const { register, login } = require('../controllers/authController');
+const upload = require('../middlewares/upload');
+
 const router = express.Router();
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       required:
+ *         - firstName
+ *         - lastName
+ *         - email
+ *         - password
+ *         - role
+ *       properties:
+ *         firstName:
+ *           type: string
+ *           description: The user's first name
+ *         lastName:
+ *           type: string
+ *           description: The user's last name
+ *         email:
+ *           type: string
+ *           description: The user's email address
+ *         password:
+ *           type: string
+ *           description: The user's password
+ *         role:
+ *           type: string
+ *           description: The user's role (admin, teacher, student)
+ *         enrollmentNumber:
+ *           type: string
+ *           description: The student's enrollment number (only for students)
+ *         firstYearOfStudy:
+ *           type: string
+ *           description: The first year of study (only for students)
+ *         avatar:
+ *           type: string
+ *           description: URL to the user's avatar
+ *       example:
+ *         firstName: John
+ *         lastName: Doe
+ *         email: john.doe@example.com
+ *         password: password123
+ *         role: student
+ *         enrollmentNumber: EN12345
+ *         firstYearOfStudy: 2023
+ *         avatar: /uploads/avatar.jpg
+ */
 
 /**
  * @swagger
@@ -11,27 +62,42 @@ const router = express.Router();
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
- *               username:
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               email:
  *                 type: string
  *               password:
  *                 type: string
+ *               role:
+ *                 type: string
+ *               enrollmentNumber:
+ *                 type: string
+ *               firstYearOfStudy:
+ *                 type: string
+ *               avatar:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       201:
  *         description: User registered successfully
  *       400:
- *         description: User already exists or validation error
+ *         description: Bad request
+ *       500:
+ *         description: Server error
  */
-router.post('/register', register) ;
+router.post('/register', upload.single('avatar'), register);
 
 /**
  * @swagger
  * /api/auth/login:
  *   post:
- *     summary: Login user
+ *     summary: Login a user
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -40,17 +106,18 @@ router.post('/register', register) ;
  *           schema:
  *             type: object
  *             properties:
- *               username:
+ *               email:
  *                 type: string
  *               password:
  *                 type: string
  *     responses:
  *       200:
- *         description: User logged in successfully
- *       401:
+ *         description: Login successful
+ *       400:
  *         description: Invalid credentials
+ *       500:
+ *         description: Server error
  */
-
 router.post('/login', login);
 
 module.exports = router;
