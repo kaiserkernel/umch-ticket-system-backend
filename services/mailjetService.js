@@ -15,7 +15,7 @@ async function sendEmail(toEmail, toName, subject, textContent, htmlContent) {
             Messages: [
                 {
                     From: {
-                        Email: 'codeking224713@gmail.com',
+                        Email: process.env.SUPER_ADMIN_EMAIL,
                         Name: 'Admin',
                     },
                     To: [
