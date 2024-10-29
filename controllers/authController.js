@@ -30,14 +30,16 @@ exports.register = async (req, res) => {
   }
 
   try {
-    const query = { email };
+    let existingUser;
+
+    // Check uniqueness based on role
     if (role === "2") {
-      query.enrollmentNumber = enrollmentNumber;
+      existingUser = await User.findOne({ enrollmentNumber });
+    } else {
+      existingUser = await User.findOne({ email });
     }
 
-    const existingUser = await User.findOne(query);
     if (existingUser) {
-      console.log(existingUser);
       return res.status(400).json({ errors: "User already exists" });
     }
 
@@ -59,6 +61,7 @@ exports.register = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 exports.login = async (req, res) => {
   const errors = validationResult(req);
