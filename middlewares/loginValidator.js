@@ -13,7 +13,7 @@ const loginValidator = [
 
     body('password')
         .notEmpty().withMessage("Password is required")
-        .isLength({ min: 6 }).withMessage("Password must be at least 6 characters long"),
+        .isLength({ min: 6 }).withMessage("Invalid password"),
 ];
 
 module.exports = loginValidator;
