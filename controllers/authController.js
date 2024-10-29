@@ -23,7 +23,7 @@ exports.register = async (req, res) => {
     firstYearOfStudy,
   } = req.body;
 
-  if (role === 2 && (!enrollmentNumber || !firstYearOfStudy)) {
+  if (role === "2" && (!enrollmentNumber || !firstYearOfStudy)) {
     return res
       .status(400)
       .json({
@@ -50,8 +50,8 @@ exports.register = async (req, res) => {
       email,
       password,
       role,
-      enrollmentNumber: role === 2 ? enrollmentNumber : undefined,
-      firstYearOfStudy: role === 2 ? firstYearOfStudy : undefined,
+      enrollmentNumber: role === "2" ? enrollmentNumber : undefined,
+      firstYearOfStudy: role === "2" ? firstYearOfStudy : undefined,
       avatar: req.file
         ? `/uploads/images/avatar/${req.file.filename}`
         : undefined,
@@ -94,10 +94,18 @@ exports.login = async (req, res) => {
     }
 
     logger(`User logged in: ${email}`);
+    
+    const userData = {
+      email: user.email,
+      fullName: user.firstName + " " + user.lastName,
+      role: user.role,
+      avatar: user.avatar
+    }
 
     return res.json({
       success: true,
       token: `Bearer ${token}`,
+      userData: userData
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
