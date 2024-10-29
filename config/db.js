@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const seedSuperAdmin = require('./dbSeeder'); 
 
 const connectDB = async () => {
     try {
@@ -7,6 +8,9 @@ const connectDB = async () => {
             useUnifiedTopology: true,
         });
         console.log('MongoDB connected');
+
+        // Seed the super admin if not exists
+        await seedSuperAdmin();
     } catch (error) {
         console.error('MongoDB connection error:', error);
         process.exit(1);

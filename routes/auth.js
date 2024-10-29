@@ -32,14 +32,14 @@ const router = express.Router();
  *           type: string
  *           description: "The user's password"
  *         role:
- *           type: number
+ *           type: integer
  *           description: "The user's role (0 for admin, 1 for teacher, 2 for student)"
  *         enrollmentNumber:
  *           type: string
- *           description: "The student's enrollment number (only required for students)"
+ *           description: "The student's enrollment number (required for students)"
  *         firstYearOfStudy:
  *           type: string
- *           description: "The first year of study (only for students)"
+ *           description: "The student's first year of study (required for students)"
  *         avatar:
  *           type: string
  *           description: "URL to the user's avatar"
@@ -58,7 +58,7 @@ const router = express.Router();
  * @swagger
  * /api/auth/register:
  *   post:
- *     summary: Register a new user
+ *     summary: Register a new student
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -69,14 +69,19 @@ const router = express.Router();
  *             properties:
  *               firstName:
  *                 type: string
+ *                 description: "User's first name"
  *               lastName:
  *                 type: string
+ *                 description: "User's last name"
  *               email:
  *                 type: string
+ *                 description: "User's email address (optional for students)"
  *               password:
  *                 type: string
+ *                 description: "User's password"
  *               role:
  *                 type: integer
+ *                 description: "User's role (0 for admin, 1 for teacher, 2 for student)"
  *               enrollmentNumber:
  *                 type: string
  *                 description: "Required if role is 2 (student)"
@@ -86,11 +91,12 @@ const router = express.Router();
  *               avatar:
  *                 type: string
  *                 format: binary
+ *                 description: "User's avatar image"
  *     responses:
  *       201:
  *         description: User registered successfully
  *       400:
- *         description: Bad request
+ *         description: Bad request, validation errors
  *       500:
  *         description: Server error
  */
@@ -98,9 +104,9 @@ router.post('/register', upload.single('avatar'), registerValidator, register);
 
 /**
  * @swagger
- * /api/auth/login:
+ * /api/auth/admin:
  *   post:
- *     summary: Login a user
+ *     summary: Login an admin
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -111,21 +117,53 @@ router.post('/register', upload.single('avatar'), registerValidator, register);
  *             properties:
  *               email:
  *                 type: string
- *                 description: "User's email address (not required for students)"
- *               enrollmentNumber:
- *                 type: string
- *                 description: "Student's enrollment number (required if role is 2)"
+ *                 description: "Admin's email address"
  *               password:
  *                 type: string
- *                 description: "User's password"
+ *                 description: "Admin's password"
  *     responses:
  *       200:
- *         description: Login successful
+ *         description: Admin login successful
  *       400:
  *         description: Invalid credentials
  *       500:
  *         description: Server error
  */
-router.post('/login', loginValidator, login);
+router.post('/admin', loginValidator, login); // Admin login
+
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Login a student
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: "Student's email address (not required for students)"
+ *               enrollmentNumber:
+ *                 type: string
+ *                 description: "Student's enrollment number (required for students)"
+ *               password:
+ *                 type: string
+ *                 description: "User's password"
+ *               rememberMe:
+ *                 type: boolean
+ *                 description: "If true, token will last for 7 days; otherwise, 1 hour."
+ *     responses:
+ *       200:
+ *         description: Student login successful
+ *       400:
+ *         description: Invalid credentials
+ *       500:
+ *         description: Server error
+ */
+router.post('/login', loginValidator, login); // Student login
 
 module.exports = router;
