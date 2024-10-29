@@ -2,8 +2,8 @@
 const express = require('express');
 const { register, login } = require('../controllers/authController');
 const upload = require('../middlewares/upload');
-const registerValidation = require('../middlewares/registerValidator');
-const loginValidation = require('../middlewares/loginValidator');
+const registerValidator = require('../middlewares/registerValidator');
+const loginValidator = require('../middlewares/loginValidator');
 
 const router = express.Router();
 
@@ -16,7 +16,6 @@ const router = express.Router();
  *       required:
  *         - firstName
  *         - lastName
- *         - email
  *         - password
  *         - role
  *       properties:
@@ -28,7 +27,7 @@ const router = express.Router();
  *           description: "The user's last name"
  *         email:
  *           type: string
- *           description: "The user's email address"
+ *           description: "The user's email address (optional for students)"
  *         password:
  *           type: string
  *           description: "The user's password"
@@ -37,7 +36,7 @@ const router = express.Router();
  *           description: "The user's role (0 for admin, 1 for teacher, 2 for student)"
  *         enrollmentNumber:
  *           type: string
- *           description: "The student's enrollment number (only for students)"
+ *           description: "The student's enrollment number (only required for students)"
  *         firstYearOfStudy:
  *           type: string
  *           description: "The first year of study (only for students)"
@@ -80,8 +79,10 @@ const router = express.Router();
  *                 type: integer
  *               enrollmentNumber:
  *                 type: string
+ *                 description: "Required if role is 2 (student)"
  *               firstYearOfStudy:
  *                 type: string
+ *                 description: "Required if role is 2 (student)"
  *               avatar:
  *                 type: string
  *                 format: binary
@@ -93,7 +94,7 @@ const router = express.Router();
  *       500:
  *         description: Server error
  */
-router.post('/register', upload.single('avatar'), registerValidation, register);
+router.post('/register', upload.single('avatar'), registerValidator, register);
 
 /**
  * @swagger
@@ -110,8 +111,13 @@ router.post('/register', upload.single('avatar'), registerValidation, register);
  *             properties:
  *               email:
  *                 type: string
+ *                 description: "User's email address (not required for students)"
+ *               enrollmentNumber:
+ *                 type: string
+ *                 description: "Student's enrollment number (required if role is 2)"
  *               password:
  *                 type: string
+ *                 description: "User's password"
  *     responses:
  *       200:
  *         description: Login successful
@@ -120,6 +126,6 @@ router.post('/register', upload.single('avatar'), registerValidation, register);
  *       500:
  *         description: Server error
  */
-router.post('/login', loginValidation, login);
+router.post('/login', loginValidator, login);
 
 module.exports = router;
