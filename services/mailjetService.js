@@ -15,7 +15,7 @@ async function sendEmail(toEmail, toName, subject, textContent, htmlContent) {
             Messages: [
                 {
                     From: {
-                        Email: 'damon.edwards612@gmail.com',
+                        Email: 'codeking224713@gmail.com',
                         Name: 'Admin',
                     },
                     To: [

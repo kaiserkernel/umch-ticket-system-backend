@@ -26,7 +26,7 @@ async function handleFormSubmission(req, res) {
 
         // Send the confirmation email
         await sendEmail(email, name, 'Your Submission Confirmation', 'Thank you for your submission.', emailContent);
-
+        console.log(emailContent);
         res.status(200).json({ message: 'Form submitted successfully' });
     } catch (error) {
         console.error('Error handling form submission:', error);
