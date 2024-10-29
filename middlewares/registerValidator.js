@@ -1,4 +1,3 @@
-// middlewares/registerValidator.js
 const { body } = require('express-validator');
 
 const registerValidator = [
@@ -19,8 +18,8 @@ const registerValidator = [
         .isInt({ min: 0, max: 2 }).withMessage("Role must be 0, 1, or 2"),
 
     body('email')
-        .if((value, { req }) => req.body.role !== "2")
-        .notEmpty().withMessage("Email is required for non-students")
+        // .if((value, { req }) => req.body.role !== "2")
+        .notEmpty().withMessage("Email is required")
         .isEmail().withMessage("Invalid email format"),
 
     body('enrollmentNumber')
