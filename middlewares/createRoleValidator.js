@@ -1,6 +1,6 @@
 const { body, validationResult } = require('express-validator');
 
-exports.createRoleValidator = [
+const createRoleValidator = [
   body('firstName').notEmpty().withMessage('First name is required'),
   body('lastName').notEmpty().withMessage('Last name is required'),
   body('email').isEmail().withMessage('Please provide a valid email'),
@@ -14,3 +14,5 @@ exports.createRoleValidator = [
     .isIn([0, 1, 2, 3, 4])
     .withMessage('Position must be between 0 and 4'),
 ];
+
+module.exports = createRoleValidator;
