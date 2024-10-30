@@ -3,6 +3,7 @@ const { createRole, getUsers } = require('../controllers/adminController');
 const { body } = require('express-validator');
 const checkSuperAdmin = require('../middlewares/checkSuperAdmin');
 const authMiddleware = require('../middlewares/authMiddleware');
+const createRoleValidator = require('../middlewares/createRoleValidator');
 
 const router = express.Router();
 
@@ -41,17 +42,7 @@ const router = express.Router();
  *       500:
  *         description: Server error
  */
-router.post('/create-role', 
-  [
-    body('firstName').notEmpty(),
-    body('lastName').notEmpty(),
-    body('email').isEmail(),
-    body('password').isLength({ min: 6 }),
-    body('role').isIn([0,1]),
-    body('position').isIn([0,1,2,3,4]),
-  ], 
-  createRole
-);
+router.post('/create-role', createRoleValidator, createRole);
 
 /**
  * @swagger
