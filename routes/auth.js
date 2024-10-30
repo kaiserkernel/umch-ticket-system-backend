@@ -33,7 +33,7 @@ const router = express.Router();
  *           description: "The user's password"
  *         role:
  *           type: integer
- *           description: "The user's role (0 for admin, 1 for teacher, 2 for student)"
+ *           description: "The user's role (0 for admin, 2 for student)"
  *         enrollmentNumber:
  *           type: string
  *           description: "The student's enrollment number (required for students)"
@@ -81,7 +81,7 @@ const router = express.Router();
  *                 description: "User's password"
  *               role:
  *                 type: integer
- *                 description: "User's role (0 for admin, 1 for teacher, 2 for student)"
+ *                 description: "User's role (0 for admin, 2 for student)"
  *               enrollmentNumber:
  *                 type: string
  *                 description: "Required if role is 2 (student)"

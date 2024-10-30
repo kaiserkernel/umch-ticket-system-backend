@@ -9,7 +9,7 @@ const router = express.Router();
  * @swagger
  * /api/admin/create-role:
  *   post:
- *     summary: Create a new user (Admin/Teacher)
+ *     summary: Create a new role (Admin)
  *     tags: [Admin]
  *     requestBody:
  *       required: true
@@ -29,6 +29,9 @@ const router = express.Router();
  *               role:
  *                 type: number
  *                 enum: [0,1]
+ *               position:
+ *                 type: number
+ *                 enum: [0,1,2,3]
  *     responses:
  *       201:
  *         description: User created and email sent successfully
@@ -43,7 +46,8 @@ router.post('/create-role',
     body('lastName').notEmpty(),
     body('email').isEmail(),
     body('password').isLength({ min: 6 }),
-    body('role').isIn([0,1])
+    body('role').isIn([0,1]),
+    body('position').isIn([0,1,2,3,4]),
   ], 
   createRole
 );

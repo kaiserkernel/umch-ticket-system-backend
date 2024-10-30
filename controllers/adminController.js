@@ -2,7 +2,7 @@ const { validationResult } = require("express-validator");
 const User = require("../models/User");
 const { sendEmail } = require('../services/mailjetService');
 
-const secret = process.env.SECRET || "some other secret as default";
+const positionNames = process.env.POSITION_NAMES;
 
 require("dotenv").config();
 
@@ -12,7 +12,7 @@ exports.createRole = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
   
-    const {firstName, lastName, email, password, role } = req.body;
+    const {firstName, lastName, email, password, role, position } = req.body;
   
     try {
       const existingUser = await User.findOne({ email });
@@ -26,19 +26,19 @@ exports.createRole = async (req, res) => {
         email,
         password,
         role,
+        position
       });
   
       await newUser.save();
   
-      const roleNames = ["admin", "teacher"];
-
       const emailContent = `
       <h3>You have been assigned a new role!</h3>
       <p>Here are your account details:</p>
       <ul>
           <li><strong>Email:</strong> ${email}</li>
           <li><strong>Password:</strong> ${password}</li>
-          <li><strong>Role:</strong> ${roleNames[role]}</li>
+          <li><strong>Role:</strong> admin</li>
+          <li><strong>Position:</strong> ${positionNames[position]}</li>
       </ul>
       <p>You can log in with these credentials.</p>
     `;
