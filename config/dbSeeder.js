@@ -11,6 +11,7 @@ async function seedSuperAdmin() {
         email: process.env.SUPER_ADMIN_EMAIL,
         password: process.env.SUPER_ADMIN_PASSWORD,
         role: 0, 
+        position: 0,
       });
       
       await superAdmin.save();

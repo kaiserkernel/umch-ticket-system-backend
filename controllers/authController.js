@@ -3,9 +3,10 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const logger = require("../utils/logger");
-const secret = process.env.JWT_SECRET || "secret";
 
 require("dotenv").config();
+
+const secret = process.env.JWT_SECRET;
 
 exports.register = async (req, res) => {
   const errors = validationResult(req);
@@ -69,7 +70,7 @@ exports.login = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { email, password, enrollmentNumber, rememberMe } = req.body;
+  const { email, password, enrollmentNumber } = req.body;
 
   try {
     const user = await User.findOne(
@@ -85,13 +86,12 @@ exports.login = async (req, res) => {
     if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials" });
     
-    if(user.role !== 0){
+    if(email && user.role !== 0){
       return res.status(403).json({ message: 'Access forbidden: Admins only' });
     }
     const payload = { id: user._id, email: user.email, role: user.role };
 
-    const tokenExpiry = rememberMe ? '7d' : '1h';
-    const token = await jwt.sign(payload, secret, { expiresIn: tokenExpiry });
+    const token = await jwt.sign(payload, secret, { expiresIn: '1h' });
 
     if (!token) return res.status(500).json({ error: "Error signing token" });
 
