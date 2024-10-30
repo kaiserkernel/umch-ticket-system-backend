@@ -1,7 +1,8 @@
-// routes/adminRoutes.js
 const express = require('express');
-const { createRole } = require('../controllers/adminController');
-const { body, validationResult } = require('express-validator');
+const { createRole, getUsers } = require('../controllers/adminController');
+const { body } = require('express-validator');
+const checkSuperAdmin = require('../middlewares/checkSuperAdmin');
+const authMiddleware = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
@@ -51,5 +52,21 @@ router.post('/create-role',
   ], 
   createRole
 );
+
+/**
+ * @swagger
+ * /api/admin/get-users:
+ *   get:
+ *     summary: Retrieve all users (Super Admin only)
+ *     tags: [Admin]
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved all users
+ *       403:
+ *         description: Forbidden - Only accessible to Super Admin
+ *       500:
+ *         description: Server error
+ */
+router.get('/get-users', authMiddleware, checkSuperAdmin, getUsers);
 
 module.exports = router;

@@ -6,7 +6,17 @@ const positionNames = process.env.POSITION_NAMES;
 
 require("dotenv").config();
 
-exports.createRole = async (req, res) => {
+const getUsers = async (req, res) => {
+    try {
+      const users = await User.find();
+      res.status(200).json(users);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  };
+
+const createRole = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -55,3 +65,4 @@ exports.createRole = async (req, res) => {
  
 };
 
+module.exports = { createRole, getUsers };
