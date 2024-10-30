@@ -2,9 +2,9 @@ const { validationResult } = require("express-validator");
 const User = require("../models/User");
 const { sendEmail } = require('../services/mailjetService');
 
-const positionNames = process.env.POSITION_NAMES;
 
 require("dotenv").config();
+const positionNames = process.env.POSITION_NAMES.split(',');
 
 const getUsers = async (req, res) => {
     try {
@@ -40,6 +40,7 @@ const createRole = async (req, res) => {
       });
   
       await newUser.save();
+      console.log(positionNames[0])
   
       const emailContent = `
       <h3>You have been assigned a new role!</h3>
@@ -54,7 +55,7 @@ const createRole = async (req, res) => {
     `;
 
     // Send the confirmation email
-    await sendEmail(email, email, 'New Role Assigned', 'You have been assigned a new role.', emailContent);
+    await sendEmail(email, email, 'You are invited as a manager of UMCH ticket system!', 'Welcome ! Now you are in a xxxx role in UMCH ticket system!', emailContent);
 
     res.status(201).json({ message: 'Role created successfully, confirmation email sent.' });
   

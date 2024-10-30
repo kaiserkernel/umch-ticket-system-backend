@@ -7,6 +7,7 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
 const formRoutes = require('./routes/form');
 const adminRoutes = require('./routes/admin');
+const userRoutes = require('./routes/user');
 const path = require('path');
 const setupSwagger = require('./swagger/swagger');
 dotenv.config();
@@ -30,6 +31,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/form', formRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/user', userRoutes);
 
 setupSwagger(app);
 
