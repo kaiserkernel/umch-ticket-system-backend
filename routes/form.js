@@ -5,10 +5,11 @@ const router = express.Router();
 
 /**
  * @swagger
- * /submit-form:
+ * api/form/submit-form:
  *   post:
  *     summary: Submit form data
- *     description: Handles form submissions and processes the data.
+ *     tags: [Form]
+ *    description: Handles form submissions and processes the data.
  *     requestBody:
  *       required: true
  *       content:

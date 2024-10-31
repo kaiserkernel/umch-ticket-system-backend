@@ -4,9 +4,10 @@ const router = express.Router();
 
 /**
  * @swagger
- * /submit-inquiry:
+ * api/user/submit-inquiry:
  *   post:
  *     summary: Submit an inquiry
+ *     tags: [User]
  *     description: Endpoint to submit an inquiry.
  *     requestBody:
  *       required: true

@@ -101,6 +101,15 @@ const inquirySchema = new mongoose.Schema({
       type: Boolean,
       required: true,
     },
+    status:{
+      type:Number,
+      enum:[0,1,2,3],
+      default:0,
+      required:true,
+    },
+    reason:{
+      type: String
+    },
     createdAt: { type: Date, default: Date.now },
   });
   
