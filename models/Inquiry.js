@@ -18,7 +18,7 @@ const inquirySchema = new mongoose.Schema({
       match: /.+\@.+\..+/,
     },
     enrollmentNumber: {
-      type: String,
+      type: Number,
       required: true,
       unique: true,
       trim: true,
@@ -32,6 +32,7 @@ const inquirySchema = new mongoose.Schema({
       type: String,
       required: true,
       enum: [
+        'Applications and Requests',
         'Book rental UMCH library',
         'Campus IT',
         'Complaints',
@@ -43,7 +44,6 @@ const inquirySchema = new mongoose.Schema({
     },
     subCategory1: {
       type: String,
-      required: true,
       enum: [
         'Change of teaching hospital',
         'Change of study group',
@@ -81,7 +81,6 @@ const inquirySchema = new mongoose.Schema({
         'Exam',
         'Other',
       ],
-      default:null,
     },
     subCategory2: {
       type: String,
@@ -90,8 +89,6 @@ const inquirySchema = new mongoose.Schema({
         'Campus Infrastructure (Furniture/Rooms etc)',
         'Finance',
       ],
-      required: true,
-      default: null,
     },
     details: {
       type: Object,

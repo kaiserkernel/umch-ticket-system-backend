@@ -12,12 +12,12 @@ const UserSchema = new mongoose.Schema({
     role: { type: Number, enum: [0, 2], required: true }, 
     position: { type: Number, enum: [0, 1, 2, 3, 4], default: 4, required: true },
     enrollmentNumber: { 
-        type: String, 
+        type: Number, 
         unique: function() { return this.role === 2; }, 
         required: function() { return this.role === 2; } 
     },
     firstYearOfStudy: { 
-        type: String, 
+        type: Number, 
         required: function() { return this.role === 2; } 
     },
     avatar: { type: String },

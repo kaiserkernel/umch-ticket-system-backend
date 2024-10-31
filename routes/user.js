@@ -4,7 +4,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * api/user/submit-inquiry:
+ * /api/user/submit-inquiry:
  *   post:
  *     summary: Submit an inquiry
  *     tags: [User]
@@ -24,7 +24,7 @@ const router = express.Router();
  *                 type: string
  *                 format: email
  *               enrollmentNumber:
- *                 type: string
+ *                 type: number
  *               firstYearOfStudy:
  *                 type: integer
  *               inquiryCategory:
