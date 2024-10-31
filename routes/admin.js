@@ -1,5 +1,5 @@
 const express = require('express');
-const { createRole, getUsers, getReceivedInquiries, rejectInquiry, acceptInquiry } = require('../controllers/adminController');
+const { createRole, getUsers, getReceivedInquiries, getInquiriesByEnrollmentNumber,checkInquiry, rejectInquiry, acceptInquiry } = require('../controllers/adminController');
 const checkSuperAdmin = require('../middlewares/checkSuperAdmin');
 const authMiddleware = require('../middlewares/authMiddleware');
 const createRoleValidator = require('../middlewares/createRoleValidator');
@@ -12,6 +12,8 @@ const router = express.Router();
  *   post:
  *     summary: Create a new role (Admin)
  *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -49,6 +51,8 @@ router.post('/create-role', createRoleValidator, createRole);
  *   get:
  *     summary: Retrieve all users (Super Admin only)
  *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Successfully retrieved all users
@@ -77,10 +81,60 @@ router.get('/inquiries', authMiddleware, getReceivedInquiries);
 
 /**
  * @swagger
+ * /api/admin/inquiries/{enrollmentNumber}:
+ *   get:
+ *     summary: Get inquiries by enrollment number
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: enrollmentNumber
+ *         in: path
+ *         required: true
+ *         description: Enrollment number of the user
+ *         schema:
+ *           type: number
+ *     responses:
+ *       200:
+ *         description: Inquiries retrieved successfully
+ *       404:
+ *         description: No inquiries found for this enrollment number
+ */
+router.get('/inquiries/:enrollmentNumber', authMiddleware, getInquiriesByEnrollmentNumber);
+
+/**
+ * @swagger
+ * /api/admin/inquiries/{id}/check:
+ *   patch:
+ *     summary: Check an inquiry
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The inquiry ID
+ *     responses:
+ *       200:
+ *         description: Inquiry checked
+ *       404:
+ *         description: Inquiry not found
+ *       500:
+ *         description: Server error
+ */
+router.patch('/inquiries/:id/check', authMiddleware, checkInquiry);
+
+/**
+ * @swagger
  * /api/admin/inquiries/{id}/accept:
  *   patch:
  *     summary: Accept an inquiry
  *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -104,6 +158,8 @@ router.patch('/inquiries/:id/accept', authMiddleware, acceptInquiry);
  *   patch:
  *     summary: Reject an inquiry
  *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id

@@ -25,7 +25,7 @@ const createRole = async (req, res) => {
     }
   
     const {firstName, lastName, email, password, role, position } = req.body;
-  
+
     try {
       const existingUser = await User.findOne({ email });
       if (existingUser) {
@@ -42,22 +42,31 @@ const createRole = async (req, res) => {
       });
   
       await newUser.save();
-      console.log(positionNames[0])
   
       const emailContent = `
-      <h3>You have been assigned a new role!</h3>
+      <h3>Dear ${firstName}</h3>
+      <p>You are now part of the UMCH Ticket System Team, and we are pleased to welcome you onboard.
+      The UMCH Ticket System serves as a digital request and complaint portal for students.
+      We appreciate your willingness to take responsibility for the assigned requests or complaints 
+      and to provide timely assistance to our students in resolving their concerns.</p>
+      <p>We have granted you access to the following inquiries [Acess to] with the Role ${positionNames[position]}.</p>
       <p>Here are your account details:</p>
       <ul>
           <li><strong>Email:</strong> ${email}</li>
           <li><strong>Password:</strong> ${password}</li>
-          <li><strong>Role:</strong> admin</li>
-          <li><strong>Position:</strong> ${positionNames[position]}</li>
+          <li><strong>Title:</strong>[Title]</li>
+          <li><strong>First Name:</strong>${firstName}</li>
+          <li><strong>Last Name:</strong>${lastName}</li>
+          <li><strong>Department:</strong> [Department]</li>
       </ul>
-      <p>You can log in with these credentials.</p>
+      <p>If you have any technical questions, please don’t hesitate to reach out to us at marketing@edu.umch.de.
+      You can log in using these credentials [LINK].Thank you for your support, and we look forward to a successful collaboration!.</p>
+      <p>Best regards,</p>
+      <p>Your UMCH Team</p>
     `;
 
     // Send the confirmation email
-    await sendEmail(email, email, 'You are invited as a manager of UMCH ticket system!', 'Welcome ! Now you are in a xxxx role in UMCH ticket system!', emailContent);
+    await sendEmail(email, firstName + lastName, 'Welcome to the UMCH Ticket System Team!', 'Welcome ! Now you are in a admin role in UMCH ticket system!', emailContent);
 
     res.status(201).json({ message: 'Role created successfully, confirmation email sent.' });
   
@@ -78,12 +87,82 @@ const getReceivedInquiries = async (req, res) => {
   }
 };
 
-// Accept an inquiry
-const acceptInquiry = async (req, res) => {
+// Get inquiries by enrollment number
+
+const getInquiriesByEnrollmentNumber = async (req, res) => {
+  const { enrollmentNumber } = req.params;
+
+  try {
+      // Find inquiries by enrollment number
+      const inquiries = await Inquiry.find({ enrollmentNumber });
+
+      if (inquiries.length === 0) {
+          return res.status(404).json({ message: 'No inquiries found for this enrollment number.' });
+      }
+
+      return res.status(200).json(inquiries);
+  } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'An error occurred while retrieving inquiries.' });
+  }
+};
+
+// Check an inquiry
+const checkInquiry = async (req, res) => {
   try {
     const inquiry = await Inquiry.findByIdAndUpdate(req.params.id, { status: 1 }, { new: true });
     if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
-    res.json({ message: 'Inquiry accepted', inquiry });
+    console.log(inquiry);
+    
+    const emailContent = `
+    <h>Dear ${inquiry.firstName} ${inquiry.lastName}</h>
+    <p>Your ticket ${inquiry.enrollmentNumber} on ${inquiry.inquiryCategory} submitted at ${inquiry.createdAt} is under checking now.</p>
+    <p>We will get back to you shortly with further updates.
+    Wishing you a great day, and we will follow up with more information soon.</p>
+    <p>Best regards,</p>
+    <p>Your UMCH Team</p>
+    `;
+    
+    // Send the confirmation email
+    await sendEmail(
+      inquiry.email,
+      inquiry.firstName + inquiry.lastName,
+        `Your ticket is being checked - Ticket Number ${inquiry.enrollmentNumber}!`,
+        `Dear ${inquiry.firstName} ${inquiry.lastName}`,
+        emailContent
+    );
+     
+    res.json({ message: 'Inquiry checked and sent confirmation message', inquiry });
+
+  } catch (error) {
+    res.status(500).json({ message: 'Error checking inquiry', error });
+  }
+};
+
+// Accept an inquiry
+const acceptInquiry = async (req, res) => {
+  try {
+    const inquiry = await Inquiry.findByIdAndUpdate(req.params.id, { status: 2 }, { new: true });
+    if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
+  
+    const emailContent = `
+    <h>Dear ${inquiry.firstName} ${inquiry.lastName}</h>
+    <p>Your ticket ${inquiry.enrollmentNumber} on ${inquiry.inquiryCategory} submitted at ${inquiry.createdAt} has been accepted.</p>
+    <p>Best regards,</p>
+    <p>Your UMCH Team</p>
+    `;
+    
+    // Send the confirmation email
+    await sendEmail(
+      inquiry.email,
+      inquiry.firstName + inquiry.lastName,
+        `Your ticket has been accepted - Ticket Number ${inquiry.enrollmentNumber}!`,
+        `Dear ${inquiry.firstName} ${inquiry.lastName}`,
+        emailContent
+    );
+
+    res.json({ message: 'Inquiry accepted and sent confirmation message', inquiry });
+
   } catch (error) {
     res.status(500).json({ message: 'Error accepting inquiry', error });
   }
@@ -92,12 +171,31 @@ const acceptInquiry = async (req, res) => {
 // Reject an inquiry
 const rejectInquiry = async (req, res) => {
   try {
-    const inquiry = await Inquiry.findByIdAndUpdate(req.params.id, { status: 2 }, { new: true });
+    const inquiry = await Inquiry.findByIdAndUpdate(req.params.id, { status: 3 }, { new: true });
     if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
-    res.json({ message: 'Inquiry rejected', inquiry });
+
+    const emailContent = `
+    <h>Dear ${inquiry.firstName} ${inquiry.lastName}</h>
+    <p>Your ticket ${inquiry.enrollmentNumber} on ${inquiry.inquiryCategory} submitted at ${inquiry.createdAt} has been rejected.</p>
+    <p>Here is the reason of rejection</p>
+    <p>${inquiry.reason?inquiry.reason:""}</p>
+    <p>Best regards,</p>
+    <p>Your UMCH Team</p>
+    `;
+    
+    // Send the confirmation email
+    await sendEmail(
+      inquiry.email,
+      inquiry.firstName + inquiry.lastName,
+        `Your ticket has been rejected - Ticket Number ${inquiry.enrollmentNumber}!`,
+        `Dear ${inquiry.firstName} ${inquiry.lastName}`,
+        emailContent
+    );
+
+    res.json({ message: 'Inquiry rejected and confirmation email sent', inquiry });
   } catch (error) {
     res.status(500).json({ message: 'Error rejecting inquiry', error });
   }
 };
 
-module.exports = { createRole, getUsers, getReceivedInquiries, acceptInquiry, rejectInquiry };
+module.exports = { createRole, getUsers, getReceivedInquiries, checkInquiry, acceptInquiry, rejectInquiry, getInquiriesByEnrollmentNumber };
