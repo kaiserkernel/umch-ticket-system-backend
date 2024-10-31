@@ -1,7 +1,7 @@
 // routes/authRoutes.js
 const express = require('express');
 const { register, login } = require('../controllers/authController');
-const upload = require('../middlewares/upload');
+const {uploadAvatar} = require('../middlewares/upload');
 const registerValidator = require('../middlewares/registerValidator');
 const loginValidator = require('../middlewares/loginValidator');
 
@@ -100,7 +100,7 @@ const router = express.Router();
  *       500:
  *         description: Server error
  */
-router.post('/register', upload.single('avatar'), registerValidator, register);
+router.post('/register', uploadAvatar.single('avatar'), registerValidator, register);
 
 /**
  * @swagger
