@@ -38,7 +38,7 @@ const router = express.Router();
  *                 type: object
  *               agreement:
  *                 type: boolean
- *               documents:  // Accept multiple file uploads for documents
+ *               documents:  
  *                 type: array
  *                 items:
  *                   type: string
