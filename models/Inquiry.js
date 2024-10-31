@@ -42,6 +42,16 @@ const inquirySchema = new mongoose.Schema({
       type: Object,
       required: true,
     },
+    documents: [{  
+      url: {
+          type: String,
+          required: false, 
+      },
+      filename: {
+          type: String,
+          required: false, 
+      }
+  }],
     agreement: {
       type: Boolean,
       required: true,
