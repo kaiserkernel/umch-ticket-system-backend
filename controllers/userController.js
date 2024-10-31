@@ -1,8 +1,6 @@
 const Inquiry = require('../models/Inquiry');
 
 async function submitInquiry (req, res) {
-    console.log("comming");
-    console.log(req.body);
     const inquiryData = req.body;
 
     try {

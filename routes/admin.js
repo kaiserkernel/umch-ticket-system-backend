@@ -1,6 +1,5 @@
 const express = require('express');
-const { createRole, getUsers } = require('../controllers/adminController');
-const { body } = require('express-validator');
+const { createRole, getUsers, getReceivedInquiries, rejectInquiry, acceptInquiry } = require('../controllers/adminController');
 const checkSuperAdmin = require('../middlewares/checkSuperAdmin');
 const authMiddleware = require('../middlewares/authMiddleware');
 const createRoleValidator = require('../middlewares/createRoleValidator');
@@ -59,5 +58,67 @@ router.post('/create-role', createRoleValidator, createRole);
  *         description: Server error
  */
 router.get('/get-users', authMiddleware, checkSuperAdmin, getUsers);
+
+/**
+ * @swagger
+ * /api/admin/inquiries:
+ *   get:
+ *     summary: Get all received inquiries
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved inquiries
+ *       500:
+ *         description: Server error
+ */
+router.get('/inquiries', authMiddleware, getReceivedInquiries);
+
+/**
+ * @swagger
+ * /api/admin/inquiries/{id}/accept:
+ *   patch:
+ *     summary: Accept an inquiry
+ *     tags: [Admin]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The inquiry ID
+ *     responses:
+ *       200:
+ *         description: Inquiry accepted
+ *       404:
+ *         description: Inquiry not found
+ *       500:
+ *         description: Server error
+ */
+router.patch('/inquiries/:id/accept', authMiddleware, acceptInquiry);
+
+/**
+ * @swagger
+ *  /api/admin/inquiries/{id}/reject:
+ *   patch:
+ *     summary: Reject an inquiry
+ *     tags: [Admin]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The inquiry ID
+ *     responses:
+ *       200:
+ *         description: Inquiry rejected
+ *       404:
+ *         description: Inquiry not found
+ *       500:
+ *         description: Server error
+ */
+router.patch('/inquiries/:id/reject', authMiddleware, rejectInquiry);
 
 module.exports = router;

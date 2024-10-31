@@ -1,11 +1,12 @@
 const { validationResult } = require("express-validator");
 const User = require("../models/User");
+const Inquiry = require("../models/Inquiry");
 const { sendEmail } = require('../services/mailjetService');
-
 
 require("dotenv").config();
 const positionNames = process.env.POSITION_NAMES.split(',');
 
+// Get all users
 const getUsers = async (req, res) => {
     try {
       const users = await User.find();
@@ -16,6 +17,7 @@ const getUsers = async (req, res) => {
     }
   };
 
+// create a now role
 const createRole = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -66,4 +68,36 @@ const createRole = async (req, res) => {
  
 };
 
-module.exports = { createRole, getUsers };
+// Get all received inquiries
+const getReceivedInquiries = async (req, res) => {
+  try {
+    const inquiries = await Inquiry.find({ status: 0 });
+    res.json(inquiries);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching inquiries', error });
+  }
+};
+
+// Accept an inquiry
+const acceptInquiry = async (req, res) => {
+  try {
+    const inquiry = await Inquiry.findByIdAndUpdate(req.params.id, { status: 1 }, { new: true });
+    if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
+    res.json({ message: 'Inquiry accepted', inquiry });
+  } catch (error) {
+    res.status(500).json({ message: 'Error accepting inquiry', error });
+  }
+};
+
+// Reject an inquiry
+const rejectInquiry = async (req, res) => {
+  try {
+    const inquiry = await Inquiry.findByIdAndUpdate(req.params.id, { status: 2 }, { new: true });
+    if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
+    res.json({ message: 'Inquiry rejected', inquiry });
+  } catch (error) {
+    res.status(500).json({ message: 'Error rejecting inquiry', error });
+  }
+};
+
+module.exports = { createRole, getUsers, getReceivedInquiries, acceptInquiry, rejectInquiry };
