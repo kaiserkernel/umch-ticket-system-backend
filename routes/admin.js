@@ -22,29 +22,50 @@ const router = express.Router();
  *             type: object
  *             properties:
  *               firstName:
- *                  type: string
+ *                 type: string
+ *                 description: User's first name
  *               lastName:
- *                  type: string
+ *                 type: string
+ *                 description: User's last name
  *               email:
  *                 type: string
+ *                 description: Email of the user
  *               password:
  *                 type: string
+ *                 description: User's password
  *               role:
  *                 type: number
- *                 enum: [0,1]
+ *                 enum: [0, 1]
+ *                 description: User role
  *               position:
  *                 type: number
- *                 enum: [0,1,2,3]
+ *                 enum: [0, 1, 2, 3]
+ *                 description: User's position
  *               title:
  *                 type: string
+ *                 description: Title of the user (optional)
+ *               category:
+ *                 type: array
+ *                 description: User's category permissions
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                       description: Name of the category
+ *                     right:
+ *                       type: number
+ *                       enum: [0, 1, 2, 3]
+ *                       description: Permission level for the category (0 - No Access, 1 - View, 2 - Edit, 3 - Full Access)
  *     responses:
  *       201:
  *         description: User created and email sent successfully
  *       400:
- *         description: Bad request
+ *         description: Bad request (e.g., user already exists)
  *       500:
  *         description: Server error
  */
+
 router.post('/create-role', createRoleValidator, createRole);
 
 /**

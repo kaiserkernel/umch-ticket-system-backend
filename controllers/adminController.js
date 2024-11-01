@@ -82,8 +82,29 @@ const createRole = async (req, res) => {
 // Get all received inquiries
 const getReceivedInquiries = async (req, res) => {
   try {
-    const inquiries = await Inquiry.find({ status: 0 });
-    res.json(inquiries);
+    const user = await User.findById(req.user.id).select('category'); 
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const inquiries = await Inquiry.find();
+
+    const visibleCategories = new Set();
+
+    user.category.forEach(cat => {
+      if (cat.right !== 0) {
+        visibleCategories.add(cat.name);
+      }
+    });
+
+    const filteredInquiries = inquiries.filter(inquiry => {
+      return visibleCategories.has(inquiry.inquiryCategory) ||
+             visibleCategories.has(inquiry.subCategory1) ||
+             visibleCategories.has(inquiry.subCategory2);
+    });
+
+    res.json(filteredInquiries);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching inquiries', error });
   }
@@ -95,29 +116,61 @@ const getInquiriesByEnrollmentNumber = async (req, res) => {
   const { enrollmentNumber } = req.params;
 
   try {
-      // Find inquiries by enrollment number
-      const inquiries = await Inquiry.find({ enrollmentNumber });
+    const user = await User.findById(req.user.id).select('category'); 
 
-      if (inquiries.length === 0) {
-          return res.status(404).json({ message: 'No inquiries found for this enrollment number.' });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const inquiries = await Inquiry.find({ enrollmentNumber });
+
+    if (inquiries.length === 0) {
+      return res.status(404).json({ message: 'No inquiries found for this enrollment number.' });
+    }
+
+    const visibleCategories = new Set();
+    user.category.forEach(cat => {
+      if (cat.right !== 0) {
+        visibleCategories.add(cat.name);
       }
+    });
 
-      return res.status(200).json(inquiries);
+    const filteredInquiries = inquiries.filter(inquiry => {
+      return visibleCategories.has(inquiry.inquiryCategory) ||
+             visibleCategories.has(inquiry.subCategory1) ||
+             visibleCategories.has(inquiry.subCategory2);
+    });
+
+    if (filteredInquiries.length === 0) {
+      return res.status(404).json({ message: 'No inquiries found within accessible categories.' });
+    }
+
+    return res.status(200).json(filteredInquiries);
   } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: 'An error occurred while retrieving inquiries.' });
+    console.error(error);
+    return res.status(500).json({ message: 'An error occurred while retrieving inquiries.', error });
   }
 };
 
 // Check an inquiry
 const checkInquiry = async (req, res) => {
   try {
-    const inquiry = await Inquiry.findByIdAndUpdate(req.params.id, { status: 1 }, { new: true });
+    const inquiry = await Inquiry.findById(req.params.id);
     if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
 
-    const authedEmail = req.user.email;
-    const authedUser = await User.findOne({ email:authedEmail });
-    
+    const authedUser = await User.findById(req.user.id).select('email firstName lastName title position category');
+
+    const categoryPermission = authedUser.category.find(cat => (cat.name === inquiry.inquiryCategory)
+                                                             ||(cat.name === inquiry.subCategory1)
+                                                             ||(cat.name === inquiry.subCategory2));
+
+    if (categoryPermission && (categoryPermission.right === 0 || categoryPermission.right === 1)) {
+      return res.status(403).json({ message: 'You do not have permission to check this inquiry.' });
+    }
+
+    inquiry.status = 1;
+    await inquiry.save();
+
     const emailContent = `
     <h>Dear ${inquiry.firstName} ${inquiry.lastName}</h>
     <p>Your ticket ${inquiry.enrollmentNumber} on ${inquiry.inquiryCategory} submitted at ${inquiry.createdAt} is under checking now.</p>
@@ -125,20 +178,20 @@ const checkInquiry = async (req, res) => {
     Wishing you a great day, and we will follow up with more information soon.</p>
     <p>Best regards,</p>
     <p>${authedUser.firstName} ${authedUser.lastName}</p>
-    <p>${authedUser.title?authedUser.title:"Professor"}</p>
-    <p>${authedUser.position?positionNames[authedUser.position]:"Vice Rector"}</p>
+    <p>${authedUser.title ? authedUser.title : "Professor"}</p>
+    <p>${authedUser.position ? positionNames[authedUser.position] : "Vice Rector"}</p>
     <p>${authedUser.email}</p>
     `;
     
     // Send the confirmation email
     await sendEmail(
       inquiry.email,
-      inquiry.firstName + inquiry.lastName,
-        `Your ticket is being checked - Ticket Number ${inquiry.enrollmentNumber}!`,
-        `Dear ${inquiry.firstName} ${inquiry.lastName}`,
-        emailContent
+      inquiry.firstName + " " + inquiry.lastName,
+      `Your ticket is being checked - Ticket Number ${inquiry.enrollmentNumber}!`,
+      `Dear ${inquiry.firstName} ${inquiry.lastName}`,
+      emailContent
     );
-     
+
     res.json({ message: 'Inquiry checked and sent confirmation message', inquiry });
 
   } catch (error) {
@@ -146,15 +199,26 @@ const checkInquiry = async (req, res) => {
   }
 };
 
+
 // Accept an inquiry
 const acceptInquiry = async (req, res) => {
   try {
-    const inquiry = await Inquiry.findByIdAndUpdate(req.params.id, { status: 2 }, { new: true });
+    const inquiry = await Inquiry.findById(req.params.id);
     if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
 
-    const authedEmail = req.user.email;
-    const authedUser = await User.findOne({ email:authedEmail });
+    const authedUser = await User.findById(req.user.id).select('email firstName lastName title position category');
+
+    const categoryPermission = authedUser.category.find(cat => (cat.name === inquiry.inquiryCategory)
+                                                             ||(cat.name === inquiry.subCategory1)
+                                                             ||(cat.name === inquiry.subCategory2));
+
+    if (categoryPermission && (categoryPermission.right === 0 || categoryPermission.right === 1 || categoryPermission.right === 2)) {
+      return res.status(403).json({ message: 'You do not have permission to approve this inquiry.' });
+    }
   
+    inquiry.status = 2;
+    await inquiry.save();
+
     const emailContent = `
     <h>Dear ${inquiry.firstName} ${inquiry.lastName}</h>
     <p>Thank you for your request and for placing your trust in us. We have carefully reviewed your request and would like to inform you of the following decision:</p>
@@ -187,11 +251,21 @@ const acceptInquiry = async (req, res) => {
 // Reject an inquiry
 const rejectInquiry = async (req, res) => {
   try {
-    const inquiry = await Inquiry.findByIdAndUpdate(req.params.id, { status: 3 }, { new: true });
+    const inquiry = await Inquiry.findById(req.params.id);
     if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
 
-    const authedEmail = req.user.email;
-    const authedUser = await User.findOne({ email:authedEmail });
+    const authedUser = await User.findById(req.user.id).select('email firstName lastName title position category');
+
+    const categoryPermission = authedUser.category.find(cat => (cat.name === inquiry.inquiryCategory)
+                                                             ||(cat.name === inquiry.subCategory1)
+                                                             ||(cat.name === inquiry.subCategory2));
+
+    if (categoryPermission && (categoryPermission.right === 0 || categoryPermission.right === 1 || categoryPermission.right === 2)) {
+      return res.status(403).json({ message: 'You do not have permission to approve this inquiry.' });
+    }
+  
+    inquiry.status = 3;
+    await inquiry.save();
 
     const emailContent = `
     <h>Dear ${inquiry.firstName} ${inquiry.lastName}</h>
