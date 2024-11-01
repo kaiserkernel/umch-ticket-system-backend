@@ -1,15 +1,28 @@
 const multer = require('multer');
 const path = require('path');
 
-const storage = multer.diskStorage({
+const avatarStorage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'public/uploads/images/avatar'); 
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname));
+        cb(null, Date.now() + path.extname(file.originalname)); 
     }
 });
 
-const upload = multer({ storage: storage });
+const documentStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/uploads/documents'); 
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname)); 
+    }
+});
 
-module.exports = upload;
+const uploadAvatar = multer({ storage: avatarStorage });
+const uploadDocuments = multer({ storage: documentStorage });
+
+module.exports = {
+    uploadAvatar,
+    uploadDocuments
+};

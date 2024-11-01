@@ -1,5 +1,6 @@
 const express = require('express');
 const { submitInquiry } = require('../controllers/userController');
+const { uploadDocuments } = require('../middlewares/upload'); 
 const router = express.Router();
 
 /**
@@ -12,7 +13,7 @@ const router = express.Router();
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -36,11 +37,16 @@ const router = express.Router();
  *                 type: object
  *               agreement:
  *                 type: boolean
+ *               documents:  
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
  *     responses:
  *       201:
  *         description: Inquiry submitted successfully
  *       400:
  *         description: Bad request
  */
-router.post('/submit-inquiry', submitInquiry);
+router.post('/submit-inquiry', uploadDocuments.array('documents'), submitInquiry);
 module.exports = router;

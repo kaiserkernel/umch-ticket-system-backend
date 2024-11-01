@@ -28,20 +28,30 @@ const inquirySchema = new mongoose.Schema({
       required: true,
       min: 1900,
     },
-    subCategory1: {
+    inquiryCategory: {
       type: String,
       required: true,
-     
+    },
+    subCategory1: {
+      type: String,
     },
     subCategory2: {
       type: String,
-     
     },
-   
     details: {
       type: Object,
       required: true,
     },
+    documents: [{  
+      url: {
+          type: String,
+          required: false, 
+      },
+      filename: {
+          type: String,
+          required: false, 
+      }
+  }],
     agreement: {
       type: Boolean,
       required: true,
