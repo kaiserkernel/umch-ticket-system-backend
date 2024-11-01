@@ -24,7 +24,7 @@ const createRole = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
   
-    const {firstName, lastName, email, password, role, position, title } = req.body;
+    const {firstName, lastName, email, password, role, position, title, category } = req.body;
 
     try {
       const existingUser = await User.findOne({ email });
@@ -39,7 +39,8 @@ const createRole = async (req, res) => {
         password,
         role,
         position,
-        title
+        title,
+        category
       });
   
       await newUser.save();

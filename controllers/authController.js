@@ -99,7 +99,8 @@ exports.login = async (req, res) => {
       email: user.email,
       firstName:user.firstName,
       lastName: user.lastName,
-      enrollmentNumber: user.enrollmentNumber
+      enrollmentNumber: user.enrollmentNumber,
+      role: user.role
     };
 
     return res.json({

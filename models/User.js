@@ -21,6 +21,17 @@ const UserSchema = new mongoose.Schema({
         type: Number, 
         required: function() { return this.role === 2; } 
     },
+    category: [
+        {
+            name: {
+                type:String
+            },
+            right: {
+                type: Number,
+                enum: [0,1,2,3]
+            },
+        }
+    ],
     avatar: { type: String },
     password: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },
