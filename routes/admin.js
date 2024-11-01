@@ -35,6 +35,8 @@ const router = express.Router();
  *               position:
  *                 type: number
  *                 enum: [0,1,2,3]
+ *               title:
+ *                 type: string
  *     responses:
  *       201:
  *         description: User created and email sent successfully

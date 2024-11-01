@@ -24,7 +24,7 @@ const createRole = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
   
-    const {firstName, lastName, email, password, role, position } = req.body;
+    const {firstName, lastName, email, password, role, position, title } = req.body;
 
     try {
       const existingUser = await User.findOne({ email });
@@ -38,13 +38,14 @@ const createRole = async (req, res) => {
         email,
         password,
         role,
-        position
+        position,
+        title
       });
   
       await newUser.save();
   
       const emailContent = `
-      <h3>Dear ${firstName}</h3>
+      <h3>Dear ${firstName} ${lastName}</h3>
       <p>You are now part of the UMCH Ticket System Team, and we are pleased to welcome you onboard.
       The UMCH Ticket System serves as a digital request and complaint portal for students.
       We appreciate your willingness to take responsibility for the assigned requests or complaints 
@@ -54,13 +55,13 @@ const createRole = async (req, res) => {
       <ul>
           <li><strong>Email:</strong> ${email}</li>
           <li><strong>Password:</strong> ${password}</li>
-          <li><strong>Title:</strong>[Title]</li>
+          <li><strong>Title:</strong>${title}</li>
           <li><strong>First Name:</strong>${firstName}</li>
           <li><strong>Last Name:</strong>${lastName}</li>
-          <li><strong>Department:</strong> [Department]</li>
+          <li><strong>Department:</strong>IT Department</li>
       </ul>
       <p>If you have any technical questions, please don’t hesitate to reach out to us at marketing@edu.umch.de.
-      You can log in using these credentials [LINK].Thank you for your support, and we look forward to a successful collaboration!.</p>
+      You can log in using these credentials <a href="https://umch-ticket-system.vercel.app/admin">LINK</a>.Thank you for your support, and we look forward to a successful collaboration!.</p>
       <p>Best regards,</p>
       <p>Your UMCH Team</p>
     `;
@@ -112,7 +113,9 @@ const checkInquiry = async (req, res) => {
   try {
     const inquiry = await Inquiry.findByIdAndUpdate(req.params.id, { status: 1 }, { new: true });
     if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
-    console.log(inquiry);
+
+    const authedEmail = req.user.email;
+    const authedUser = await User.findOne({ email:authedEmail });
     
     const emailContent = `
     <h>Dear ${inquiry.firstName} ${inquiry.lastName}</h>
@@ -120,7 +123,10 @@ const checkInquiry = async (req, res) => {
     <p>We will get back to you shortly with further updates.
     Wishing you a great day, and we will follow up with more information soon.</p>
     <p>Best regards,</p>
-    <p>Your UMCH Team</p>
+    <p>${authedUser.firstName} ${authedUser.lastName}</p>
+    <p>${authedUser.title?authedUser.title:"Professor"}</p>
+    <p>${authedUser.position?positionNames[authedUser.position]:"Vice Rector"}</p>
+    <p>${authedUser.email}</p>
     `;
     
     // Send the confirmation email
@@ -144,19 +150,28 @@ const acceptInquiry = async (req, res) => {
   try {
     const inquiry = await Inquiry.findByIdAndUpdate(req.params.id, { status: 2 }, { new: true });
     if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
+
+    const authedEmail = req.user.email;
+    const authedUser = await User.findOne({ email:authedEmail });
   
     const emailContent = `
     <h>Dear ${inquiry.firstName} ${inquiry.lastName}</h>
-    <p>Your ticket ${inquiry.enrollmentNumber} on ${inquiry.inquiryCategory} submitted at ${inquiry.createdAt} has been accepted.</p>
+    <p>Thank you for your request and for placing your trust in us. We have carefully reviewed your request and would like to inform you of the following decision:</p>
+    <p>Congratulatjons! Your request has been approved.</p>
+    <p>Please make sure to inform your teachers about the decision and any subsequent steps you need to take. If you have any further questions or need additional clarification, feel free to <a href="https://umch-ticket-system.vercel.app/admin">contact us</a>.</p>
+    <p>Thank you for your understanding and cooperation.</p>
     <p>Best regards,</p>
-    <p>Your UMCH Team</p>
+    <p>${authedUser.firstName} ${authedUser.lastName}</p>
+    <p>${authedUser.title?authedUser.title:"Professor"}</p>
+    <p>${authedUser.position?positionNames[authedUser.position]:"Vice Rector"}</p>
+    <p>${authedUser.email}</p>
     `;
     
     // Send the confirmation email
     await sendEmail(
       inquiry.email,
       inquiry.firstName + inquiry.lastName,
-        `Your ticket has been accepted - Ticket Number ${inquiry.enrollmentNumber}!`,
+        `Decision on Your Request of ${inquiry.inquiryCategory} - Ticket Number ${inquiry.enrollmentNumber}!`,
         `Dear ${inquiry.firstName} ${inquiry.lastName}`,
         emailContent
     );
@@ -174,20 +189,28 @@ const rejectInquiry = async (req, res) => {
     const inquiry = await Inquiry.findByIdAndUpdate(req.params.id, { status: 3 }, { new: true });
     if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
 
+    const authedEmail = req.user.email;
+    const authedUser = await User.findOne({ email:authedEmail });
+
     const emailContent = `
     <h>Dear ${inquiry.firstName} ${inquiry.lastName}</h>
-    <p>Your ticket ${inquiry.enrollmentNumber} on ${inquiry.inquiryCategory} submitted at ${inquiry.createdAt} has been rejected.</p>
-    <p>Here is the reason of rejection</p>
-    <p>${inquiry.reason?inquiry.reason:""}</p>
+    <p>Thank you for your request and for placing your trust in us. We have carefully reviewed your request and would like to inform you of the following decision:</p>
+    <p>We regret to inform you that your request has been declined. We understand this may be disappointing,
+    and we encourage you to reach out if you have any questions about the decision or need further assistance.</p>
+    <p>If you have any further questions or need additional clarification, feel free to <a href="https://umch-ticket-system.vercel.app/admin">contact us</a>.</p>
+    <p>Thank you for your understanding and cooperation.</p>
     <p>Best regards,</p>
-    <p>Your UMCH Team</p>
+    <p>${authedUser.firstName} ${authedUser.lastName}</p>
+    <p>${authedUser.title?authedUser.title:"Professor"}</p>
+    <p>${authedUser.position?positionNames[authedUser.position]:"Vice Rector"}</p>
+    <p>${authedUser.email}</p>
     `;
     
     // Send the confirmation email
     await sendEmail(
       inquiry.email,
       inquiry.firstName + inquiry.lastName,
-        `Your ticket has been rejected - Ticket Number ${inquiry.enrollmentNumber}!`,
+        `Decision on Your Request of ${inquiry.inquiryCategory} - Ticket Number ${inquiry.enrollmentNumber}!`,
         `Dear ${inquiry.firstName} ${inquiry.lastName}`,
         emailContent
     );

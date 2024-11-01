@@ -6,8 +6,8 @@ async function seedSuperAdmin() {
     if (!existingAdmin) {
       
       const superAdmin = new User({
-        firstName: "Super",
-        lastName: "Admin",
+        firstName: process.env.SUPER_ADMIN_FIRSTNAME,
+        lastName: process.env.SUPER_ADMIN_LASTNAME,
         email: process.env.SUPER_ADMIN_EMAIL,
         password: process.env.SUPER_ADMIN_PASSWORD,
         role: 0, 
