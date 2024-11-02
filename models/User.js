@@ -11,6 +11,7 @@ const UserSchema = new mongoose.Schema({
     },
     role: { type: Number, enum: [0, 2], required: true }, 
     position: { type: Number, enum: [0, 1, 2, 3, 4], default: 4, required: true },
+    title: { type: String },
     enrollmentNumber: { 
         type: Number, 
         unique: function() { return this.role === 2; }, 
@@ -20,6 +21,17 @@ const UserSchema = new mongoose.Schema({
         type: Number, 
         required: function() { return this.role === 2; } 
     },
+    category: [
+        {
+            name: {
+                type:String
+            },
+            right: {
+                type: Number,
+                enum: [0,1,2,3]
+            },
+        }
+    ],
     avatar: { type: String },
     password: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },

@@ -97,9 +97,10 @@ exports.login = async (req, res) => {
 
     const userData = {
       email: user.email,
-      fullName: user.firstName + " " + user.lastName,
-      role: user.role,
-      avatar: user.avatar
+      firstName:user.firstName,
+      lastName: user.lastName,
+      enrollmentNumber: user.enrollmentNumber,
+      role: user.role
     };
 
     return res.json({
