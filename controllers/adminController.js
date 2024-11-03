@@ -1,51 +1,60 @@
 const { validationResult } = require("express-validator");
 const User = require("../models/User");
 const Inquiry = require("../models/Inquiry");
-const { sendEmail } = require('../services/mailjetService');
+const { sendEmail } = require("../services/mailjetService");
 
 require("dotenv").config();
-const positionNames = process.env.POSITION_NAMES.split(',');
+const positionNames = process.env.POSITION_NAMES.split(",");
 
 // Get all users
 const getUsers = async (req, res) => {
-    try {
-      const users = await User.find();
-      res.status(200).json(users);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Server error' });
-    }
-  };
+  try {
+    const users = await User.find({ role: 0 });
+    res.status(200).json(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 // create a now role
 const createRole = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-  
-    const {firstName, lastName, email, password, role, position, title, category } = req.body;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
 
-    try {
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({ message: 'User already exists' });
-      }
-  
-      const newUser = new User({
-        firstName,
-        lastName,
-        email,
-        password,
-        role,
-        position,
-        title,
-        category
-      });
-  
-      await newUser.save();
-  
-      const emailContent = `
+  const {
+    firstName,
+    lastName,
+    email,
+    password,
+    role,
+    position,
+    title,
+    category,
+  } = req.body;
+
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    const newUser = new User({
+      firstName,
+      lastName,
+      email,
+      password,
+      role,
+      position,
+      title,
+      category,
+    });
+
+    await newUser.save();
+
+    const emailContent = `
       <h3>Dear ${firstName} ${lastName}</h3>
       <p>You are now part of the UMCH Ticket System Team, and we are pleased to welcome you onboard.
       The UMCH Ticket System serves as a digital request and complaint portal for students.
@@ -59,7 +68,7 @@ const createRole = async (req, res) => {
           <li><strong>Title:</strong>${title}</li>
           <li><strong>First Name:</strong>${firstName}</li>
           <li><strong>Last Name:</strong>${lastName}</li>
-          <li><strong>Department:</strong>${position}</li>
+          <li><strong>Department:</strong>${positionNames[position]}</li>
       </ul>
       <p>If you have any technical questions, please don’t hesitate to reach out to us at marketing@edu.umch.de.
       You can log in using these credentials <a href="https://umch-ticket-system.vercel.app/admin">LINK</a>.Thank you for your support, and we look forward to a successful collaboration!.</p>
@@ -68,47 +77,55 @@ const createRole = async (req, res) => {
     `;
 
     // Send the confirmation email
-    await sendEmail(email, firstName + lastName, 'Welcome to the UMCH Ticket System Team!', 'Welcome ! Now you are in a admin role in UMCH ticket system!', emailContent);
+    await sendEmail(
+      email,
+      firstName + lastName,
+      "Welcome to the UMCH Ticket System Team!",
+      "Welcome ! Now you are in a admin role in UMCH ticket system!",
+      emailContent
+    );
 
-    res.status(201).json({ message: 'Role created successfully, confirmation email sent.' });
-  
-    } catch (error) {
-      console.error("Error creating user:", error);
-      res.status(500).json({ message: 'Server error' });
-    }
- 
+    res
+      .status(201)
+      .json({ message: "Role created successfully, confirmation email sent." });
+  } catch (error) {
+    console.error("Error creating user:", error);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
 // Get all received inquiries
 const getReceivedInquiries = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('category'); 
+    const user = await User.findById(req.user.id).select("category");
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
     const inquiries = await Inquiry.find();
 
     const visibleCategories = new Set();
 
-    user.category.forEach(cat => {
+    user.category.forEach((cat) => {
       if (cat.permission !== "None") {
-        if(cat.subCategory1) visibleCategories.add(cat.subCategory1);
-        else visibleCategories.add(cat.inquiryCategory)
+        if (cat.subCategory1) visibleCategories.add(cat.subCategory1);
+        else visibleCategories.add(cat.inquiryCategory);
       }
     });
 
-    const filteredInquiries = inquiries.filter(inquiry => {
-      return visibleCategories.has(inquiry.inquiryCategory) ||
-             visibleCategories.has(inquiry.subCategory1)
+    const filteredInquiries = inquiries.filter((inquiry) => {
+      return (
+        visibleCategories.has(inquiry.inquiryCategory) ||
+        visibleCategories.has(inquiry.subCategory1)
+      );
     });
 
-    if(req.user.email === process.env.SUPER_ADMIN_EMAIL) res.json({inquiries, userCategory:user.category});
-    else res.json({filteredInquiries, userCategory:user.category});
-
+    if (req.user.email === process.env.SUPER_ADMIN_EMAIL)
+      res.json({ inquiries, userCategory: user.category });
+    else res.json({ filteredInquiries, userCategory: user.category });
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching inquiries', error });
+    res.status(500).json({ message: "Error fetching inquiries", error });
   }
 };
 
@@ -118,41 +135,50 @@ const getInquiriesByEnrollmentNumber = async (req, res) => {
   const { enrollmentNumber } = req.params;
 
   try {
-    const user = await User.findById(req.user.id).select('category'); 
+    const user = await User.findById(req.user.id).select("category");
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
     const inquiries = await Inquiry.find({ enrollmentNumber });
 
     if (inquiries.length === 0) {
-      return res.status(404).json({ message: 'No inquiries found for this enrollment number.' });
+      return res
+        .status(404)
+        .json({ message: "No inquiries found for this enrollment number." });
     }
 
     const visibleCategories = new Set();
-    user.category.forEach(cat => {
+    user.category.forEach((cat) => {
       if (cat.permission !== "None") {
-        if(cat.subCategory1) visibleCategories.add(cat.subCategory1);
-        else visibleCategories.add(cat.inquiryCategory)
+        if (cat.subCategory1) visibleCategories.add(cat.subCategory1);
+        else visibleCategories.add(cat.inquiryCategory);
       }
     });
 
-    const filteredInquiries = inquiries.filter(inquiry => {
-      return visibleCategories.has(inquiry.inquiryCategory) ||
-             visibleCategories.has(inquiry.subCategory1)
+    const filteredInquiries = inquiries.filter((inquiry) => {
+      return (
+        visibleCategories.has(inquiry.inquiryCategory) ||
+        visibleCategories.has(inquiry.subCategory1)
+      );
     });
 
     if (filteredInquiries.length === 0) {
-      return res.status(404).json({ message: 'No inquiries found within accessible categories.' });
+      return res
+        .status(404)
+        .json({ message: "No inquiries found within accessible categories." });
     }
 
-    if(req.user.email === process.env.SUPER_ADMIN_EMAIL) return res.status(200).json(inquiries);
+    if (req.user.email === process.env.SUPER_ADMIN_EMAIL)
+      return res.status(200).json(inquiries);
     else return res.status(200).json(filteredInquiries);
-    
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'An error occurred while retrieving inquiries.', error });
+    return res.status(500).json({
+      message: "An error occurred while retrieving inquiries.",
+      error,
+    });
   }
 };
 
@@ -160,17 +186,27 @@ const getInquiriesByEnrollmentNumber = async (req, res) => {
 const checkInquiry = async (req, res) => {
   try {
     const inquiry = await Inquiry.findById(req.params.id);
-    if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
+    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
 
-    const authedUser = await User.findById(req.user.id).select('email firstName lastName title position category');
+    const authedUser = await User.findById(req.user.id).select(
+      "email firstName lastName title position category"
+    );
 
-    if(req.user.email !== process.env.SUPER_ADMIN_EMAIL){
+    if (req.user.email !== process.env.SUPER_ADMIN_EMAIL) {
+      const categoryPermission = authedUser.category.find(
+        (cat) =>
+          cat.subCategory1 === inquiry.subCategory1 ||
+          cat.inquiryCategory === inquiry.inquiryCategory
+      );
 
-      const categoryPermission = authedUser.category.find(cat => (
-       (cat.subCategory1 === inquiry.subCategory1) || cat.inquiryCategory === inquiry.inquiryCategory));
-      
-      if (categoryPermission && (categoryPermission.permission === "None" || categoryPermission.permission === "Passive")) {
-        return res.status(403).json({ message: 'You do not have permission to check this inquiry.' });
+      if (
+        categoryPermission &&
+        (categoryPermission.permission === "None" ||
+          categoryPermission.permission === "Passive")
+      ) {
+        return res.status(403).json({
+          message: "You do not have permission to check this inquiry.",
+        });
       }
     }
 
@@ -179,16 +215,20 @@ const checkInquiry = async (req, res) => {
 
     const emailContent = `
     <h>Dear ${inquiry.firstName} ${inquiry.lastName}</h>
-    <p>Your ticket ${inquiry.enrollmentNumber} on ${inquiry.inquiryCategory} submitted at ${inquiry.createdAt} is under checking now.</p>
+    <p>Your ticket ${inquiry.enrollmentNumber} on ${
+      inquiry.inquiryCategory
+    } submitted at ${inquiry.createdAt} is under checking now.</p>
     <p>We will get back to you shortly with further updates.
     Wishing you a great day, and we will follow up with more information soon.</p>
     <p>Best regards,</p>
     <p>${authedUser.firstName} ${authedUser.lastName}</p>
     <p>${authedUser.title ? authedUser.title : "Professor"}</p>
-    <p>${authedUser.position ? positionNames[authedUser.position] : "Vice Rector"}</p>
+    <p>${
+      authedUser.position ? positionNames[authedUser.position] : "Vice Rector"
+    }</p>
     <p>${authedUser.email}</p>
     `;
-    
+
     // Send the confirmation email
     await sendEmail(
       inquiry.email,
@@ -198,32 +238,44 @@ const checkInquiry = async (req, res) => {
       emailContent
     );
 
-    res.json({ message: 'Inquiry checked and sent confirmation message', inquiry });
-
+    res.json({
+      message: "Inquiry checked and sent confirmation message",
+      inquiry,
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Error checking inquiry', error });
+    res.status(500).json({ message: "Error checking inquiry", error });
   }
 };
-
 
 // Accept an inquiry
 const acceptInquiry = async (req, res) => {
   try {
     const inquiry = await Inquiry.findById(req.params.id);
-    if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
+    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
 
-    const authedUser = await User.findById(req.user.id).select('email firstName lastName title position category');
+    const authedUser = await User.findById(req.user.id).select(
+      "email firstName lastName title position category"
+    );
 
-    if(req.user.email !== process.env.SUPER_ADMIN_EMAIL){
+    if (req.user.email !== process.env.SUPER_ADMIN_EMAIL) {
+      const categoryPermission = authedUser.category.find(
+        (cat) =>
+          cat.subCategory1 === inquiry.subCategory1 ||
+          cat.inquiryCategory === inquiry.inquiryCategory
+      );
 
-      const categoryPermission = authedUser.category.find(cat => 
-       (cat.subCategory1 === inquiry.subCategory1) || (cat.inquiryCategory === inquiry.inquiryCategory));
-      
-      if (categoryPermission && (categoryPermission.permission === "None" || categoryPermission.permission === "Passive" || categoryPermission.permission === "Active")) {
-        return res.status(403).json({ message: 'You do not have permission to approve this inquiry.' });
+      if (
+        categoryPermission &&
+        (categoryPermission.permission === "None" ||
+          categoryPermission.permission === "Passive" ||
+          categoryPermission.permission === "Active")
+      ) {
+        return res.status(403).json({
+          message: "You do not have permission to approve this inquiry.",
+        });
       }
     }
-  
+
     inquiry.status = 2;
     await inquiry.save();
 
@@ -235,24 +287,28 @@ const acceptInquiry = async (req, res) => {
     <p>Thank you for your understanding and cooperation.</p>
     <p>Best regards,</p>
     <p>${authedUser.firstName} ${authedUser.lastName}</p>
-    <p>${authedUser.title?authedUser.title:"Professor"}</p>
-    <p>${authedUser.position?positionNames[authedUser.position]:"Vice Rector"}</p>
+    <p>${authedUser.title ? authedUser.title : "Professor"}</p>
+    <p>${
+      authedUser.position ? positionNames[authedUser.position] : "Vice Rector"
+    }</p>
     <p>${authedUser.email}</p>
     `;
-    
+
     // Send the confirmation email
     await sendEmail(
       inquiry.email,
       inquiry.firstName + inquiry.lastName,
-        `Decision on Your Request of ${inquiry.inquiryCategory} - Ticket Number ${inquiry.enrollmentNumber}!`,
-        `Dear ${inquiry.firstName} ${inquiry.lastName}`,
-        emailContent
+      `Decision on Your Request of ${inquiry.inquiryCategory} - Ticket Number ${inquiry.enrollmentNumber}!`,
+      `Dear ${inquiry.firstName} ${inquiry.lastName}`,
+      emailContent
     );
 
-    res.json({ message: 'Inquiry accepted and sent confirmation message', inquiry });
-
+    res.json({
+      message: "Inquiry accepted and sent confirmation message",
+      inquiry,
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Error accepting inquiry', error });
+    res.status(500).json({ message: "Error accepting inquiry", error });
   }
 };
 
@@ -260,20 +316,30 @@ const acceptInquiry = async (req, res) => {
 const rejectInquiry = async (req, res) => {
   try {
     const inquiry = await Inquiry.findById(req.params.id);
-    if (!inquiry) return res.status(404).json({ message: 'Inquiry not found' });
+    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
 
-    const authedUser = await User.findById(req.user.id).select('email firstName lastName title position category');
+    const authedUser = await User.findById(req.user.id).select(
+      "email firstName lastName title position category"
+    );
 
-    if(req.user.email !== process.env.SUPER_ADMIN_EMAIL){
+    if (req.user.email !== process.env.SUPER_ADMIN_EMAIL) {
+      const categoryPermission =
+        authedUser.category.find(
+          (cat) => cat.subCategory1 === inquiry.subCategory1
+        ) || cat.inquiryCategory === inquiry.inquiryCategory;
 
-      const categoryPermission = authedUser.category.find(cat => 
-       (cat.subCategory1 === inquiry.subCategory1)) || (cat.inquiryCategory === inquiry.inquiryCategory);
-      
-      if (categoryPermission && (categoryPermission.permission === "None" || categoryPermission.permission === "Passive" || categoryPermission.permission === "Active")) {
-        return res.status(403).json({ message: 'You do not have permission to approve this inquiry.' });
+      if (
+        categoryPermission &&
+        (categoryPermission.permission === "None" ||
+          categoryPermission.permission === "Passive" ||
+          categoryPermission.permission === "Active")
+      ) {
+        return res.status(403).json({
+          message: "You do not have permission to approve this inquiry.",
+        });
       }
     }
-  
+
     inquiry.status = 3;
     await inquiry.save();
 
@@ -286,24 +352,37 @@ const rejectInquiry = async (req, res) => {
     <p>Thank you for your understanding and cooperation.</p>
     <p>Best regards,</p>
     <p>${authedUser.firstName} ${authedUser.lastName}</p>
-    <p>${authedUser.title?authedUser.title:"Professor"}</p>
-    <p>${authedUser.position?positionNames[authedUser.position]:"Vice Rector"}</p>
+    <p>${authedUser.title ? authedUser.title : "Professor"}</p>
+    <p>${
+      authedUser.position ? positionNames[authedUser.position] : "Vice Rector"
+    }</p>
     <p>${authedUser.email}</p>
     `;
-    
+
     // Send the confirmation email
     await sendEmail(
       inquiry.email,
       inquiry.firstName + inquiry.lastName,
-        `Decision on Your Request of ${inquiry.inquiryCategory} - Ticket Number ${inquiry.enrollmentNumber}!`,
-        `Dear ${inquiry.firstName} ${inquiry.lastName}`,
-        emailContent
+      `Decision on Your Request of ${inquiry.inquiryCategory} - Ticket Number ${inquiry.enrollmentNumber}!`,
+      `Dear ${inquiry.firstName} ${inquiry.lastName}`,
+      emailContent
     );
 
-    res.json({ message: 'Inquiry rejected and confirmation email sent', inquiry });
+    res.json({
+      message: "Inquiry rejected and confirmation email sent",
+      inquiry,
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Error rejecting inquiry', error });
+    res.status(500).json({ message: "Error rejecting inquiry", error });
   }
 };
 
-module.exports = { createRole, getUsers, getReceivedInquiries, checkInquiry, acceptInquiry, rejectInquiry, getInquiriesByEnrollmentNumber };
+module.exports = {
+  createRole,
+  getUsers,
+  getReceivedInquiries,
+  checkInquiry,
+  acceptInquiry,
+  rejectInquiry,
+  getInquiriesByEnrollmentNumber,
+};
