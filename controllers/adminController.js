@@ -123,7 +123,7 @@ const getReceivedInquiries = async (req, res) => {
 
     if (req.user.email === process.env.SUPER_ADMIN_EMAIL)
       res.json({ inquiries, userCategory: user.category });
-    else res.json({ filteredInquiries, userCategory: user.category });
+    else res.json({ inquiries: filteredInquiries, userCategory: user.category });
   } catch (error) {
     res.status(500).json({ message: "Error fetching inquiries", error });
   }
