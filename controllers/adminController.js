@@ -104,8 +104,8 @@ const getReceivedInquiries = async (req, res) => {
              visibleCategories.has(inquiry.subCategory1)
     });
 
-    if(req.user.email === process.env.SUPER_ADMIN_EMAIL) res.json(inquiries);
-    else res.json(filteredInquiries);
+    if(req.user.email === process.env.SUPER_ADMIN_EMAIL) res.json({inquiries, userCategory:user});
+    else res.json({filteredInquiries, userCategory:user});
 
   } catch (error) {
     res.status(500).json({ message: 'Error fetching inquiries', error });
