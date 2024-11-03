@@ -100,7 +100,8 @@ exports.login = async (req, res) => {
       firstName:user.firstName,
       lastName: user.lastName,
       enrollmentNumber: user.enrollmentNumber,
-      role: user.role
+      role: user.role,
+      firstYearOfStudy:user.firstYearOfStudy
     };
 
     return res.json({

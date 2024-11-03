@@ -1,5 +1,5 @@
 const express = require('express');
-const { submitInquiry } = require('../controllers/userController');
+const { submitInquiry, getInquiriesByEnrollmentNumber  } = require('../controllers/userController');
 const { uploadDocuments } = require('../middlewares/upload'); 
 const router = express.Router();
 
@@ -50,4 +50,29 @@ const router = express.Router();
  *         description: Bad request
  */
 router.post('/submit-inquiry', uploadDocuments.array('documents'), submitInquiry);
+
+/**
+ * @swagger
+ * /api/user/inquiries/{enrollmentNumber}:
+ *   get:
+ *     summary: Get inquiries by enrollment number
+ *     tags: [User]
+ *     description: Endpoint to fetch inquiries based on the enrollment number.
+ *     parameters:
+ *       - in: path
+ *         name: enrollmentNumber
+ *         required: true
+ *         description: The enrollment number to search for inquiries.
+ *         schema:
+ *           type: number
+ *     responses:
+ *       200:
+ *         description: Successful response with a list of inquiries.
+ *       404:
+ *         description: No inquiries found.
+ *       500:
+ *         description: Internal server error.
+ */
+router.get('/inquiries/:enrollmentNumber', getInquiriesByEnrollmentNumber);
+
 module.exports = router;

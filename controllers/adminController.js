@@ -59,7 +59,7 @@ const createRole = async (req, res) => {
           <li><strong>Title:</strong>${title}</li>
           <li><strong>First Name:</strong>${firstName}</li>
           <li><strong>Last Name:</strong>${lastName}</li>
-          <li><strong>Department:</strong>IT Department</li>
+          <li><strong>Department:</strong>${position}</li>
       </ul>
       <p>If you have any technical questions, please don’t hesitate to reach out to us at marketing@edu.umch.de.
       You can log in using these credentials <a href="https://umch-ticket-system.vercel.app/admin">LINK</a>.Thank you for your support, and we look forward to a successful collaboration!.</p>
