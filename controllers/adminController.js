@@ -104,9 +104,9 @@ const getReceivedInquiries = async (req, res) => {
              visibleCategories.has(inquiry.subCategory1)
     });
 
-    if(req.user.email === process.env.SUPER_ADMIN_EMAIL) filteredInquiries = inquiries;
-    
-    res.json(filteredInquiries);
+    if(req.user.email === process.env.SUPER_ADMIN_EMAIL) res.json(inquiries);
+    else res.json(filteredInquiries);
+
   } catch (error) {
     res.status(500).json({ message: 'Error fetching inquiries', error });
   }
@@ -147,9 +147,9 @@ const getInquiriesByEnrollmentNumber = async (req, res) => {
       return res.status(404).json({ message: 'No inquiries found within accessible categories.' });
     }
 
-    if(req.user.email === process.env.SUPER_ADMIN_EMAIL) filteredInquiries = inquiries;
-
-    return res.status(200).json(filteredInquiries);
+    if(req.user.email === process.env.SUPER_ADMIN_EMAIL) return res.status(200).json(inquiries);
+    else return res.status(200).json(filteredInquiries);
+    
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'An error occurred while retrieving inquiries.', error });
