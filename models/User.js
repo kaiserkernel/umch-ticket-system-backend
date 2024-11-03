@@ -23,12 +23,15 @@ const UserSchema = new mongoose.Schema({
     },
     category: [
         {
-            name: {
+            inquiryCategory: {
                 type:String
             },
-            right: {
-                type: Number,
-                enum: [0,1,2,3]
+            subCategory1: {
+                type:String
+            },
+            permission: {
+                type: String,
+                enum: ["None", "Passive", "Active", "Responsible"]
             },
         }
     ],
