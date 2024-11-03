@@ -50,13 +50,15 @@ const router = express.Router();
  *                 items:
  *                   type: object
  *                   properties:
- *                     name:
+ *                     inquiryCategory:
  *                       type: string
  *                       description: Name of the category
- *                     right:
+ *                     subCategory1:
+ *                       type: string
+ *                       description: Name of the category
+ *                     permission:
  *                       type: number
- *                       enum: [0, 1, 2, 3]
- *                       description: Permission level for the category (0 - No Access, 1 - View, 2 - Edit, 3 - Full Access)
+ *                       enum: ["None", "Passive", "Active", "Responsible"]
  *     responses:
  *       201:
  *         description: User created and email sent successfully

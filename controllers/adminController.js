@@ -93,18 +93,20 @@ const getReceivedInquiries = async (req, res) => {
     const visibleCategories = new Set();
 
     user.category.forEach(cat => {
-      if (cat.right !== 0) {
-        visibleCategories.add(cat.name);
+      if (cat.permission !== "None") {
+        if(cat.subCategory1) visibleCategories.add(cat.subCategory1);
+        else visibleCategories.add(cat.inquiryCategory)
       }
     });
 
     const filteredInquiries = inquiries.filter(inquiry => {
       return visibleCategories.has(inquiry.inquiryCategory) ||
-             visibleCategories.has(inquiry.subCategory1) ||
-             visibleCategories.has(inquiry.subCategory2);
+             visibleCategories.has(inquiry.subCategory1)
     });
 
-    res.json(filteredInquiries);
+    if(req.user.email === process.env.SUPER_ADMIN_EMAIL) res.json({inquiries, userCategory:user.category});
+    else res.json({filteredInquiries, userCategory:user.category});
+
   } catch (error) {
     res.status(500).json({ message: 'Error fetching inquiries', error });
   }
@@ -130,22 +132,24 @@ const getInquiriesByEnrollmentNumber = async (req, res) => {
 
     const visibleCategories = new Set();
     user.category.forEach(cat => {
-      if (cat.right !== 0) {
-        visibleCategories.add(cat.name);
+      if (cat.permission !== "None") {
+        if(cat.subCategory1) visibleCategories.add(cat.subCategory1);
+        else visibleCategories.add(cat.inquiryCategory)
       }
     });
 
     const filteredInquiries = inquiries.filter(inquiry => {
       return visibleCategories.has(inquiry.inquiryCategory) ||
-             visibleCategories.has(inquiry.subCategory1) ||
-             visibleCategories.has(inquiry.subCategory2);
+             visibleCategories.has(inquiry.subCategory1)
     });
 
     if (filteredInquiries.length === 0) {
       return res.status(404).json({ message: 'No inquiries found within accessible categories.' });
     }
 
-    return res.status(200).json(filteredInquiries);
+    if(req.user.email === process.env.SUPER_ADMIN_EMAIL) return res.status(200).json(inquiries);
+    else return res.status(200).json(filteredInquiries);
+    
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'An error occurred while retrieving inquiries.', error });
@@ -160,12 +164,14 @@ const checkInquiry = async (req, res) => {
 
     const authedUser = await User.findById(req.user.id).select('email firstName lastName title position category');
 
-    const categoryPermission = authedUser.category.find(cat => (cat.name === inquiry.inquiryCategory)
-                                                             ||(cat.name === inquiry.subCategory1)
-                                                             ||(cat.name === inquiry.subCategory2));
+    if(req.user.email !== process.env.SUPER_ADMIN_EMAIL){
 
-    if (categoryPermission && (categoryPermission.right === 0 || categoryPermission.right === 1)) {
-      return res.status(403).json({ message: 'You do not have permission to check this inquiry.' });
+      const categoryPermission = authedUser.category.find(cat => (
+       (cat.subCategory1 === inquiry.subCategory1) || cat.inquiryCategory === inquiry.inquiryCategory));
+      
+      if (categoryPermission && (categoryPermission.permission === "None" || categoryPermission.permission === "Passive")) {
+        return res.status(403).json({ message: 'You do not have permission to check this inquiry.' });
+      }
     }
 
     inquiry.status = 1;
@@ -208,12 +214,14 @@ const acceptInquiry = async (req, res) => {
 
     const authedUser = await User.findById(req.user.id).select('email firstName lastName title position category');
 
-    const categoryPermission = authedUser.category.find(cat => (cat.name === inquiry.inquiryCategory)
-                                                             ||(cat.name === inquiry.subCategory1)
-                                                             ||(cat.name === inquiry.subCategory2));
+    if(req.user.email !== process.env.SUPER_ADMIN_EMAIL){
 
-    if (categoryPermission && (categoryPermission.right === 0 || categoryPermission.right === 1 || categoryPermission.right === 2)) {
-      return res.status(403).json({ message: 'You do not have permission to approve this inquiry.' });
+      const categoryPermission = authedUser.category.find(cat => 
+       (cat.subCategory1 === inquiry.subCategory1) || (cat.inquiryCategory === inquiry.inquiryCategory));
+      
+      if (categoryPermission && (categoryPermission.permission === "None" || categoryPermission.permission === "Passive" || categoryPermission.permission === "Active")) {
+        return res.status(403).json({ message: 'You do not have permission to approve this inquiry.' });
+      }
     }
   
     inquiry.status = 2;
@@ -256,12 +264,14 @@ const rejectInquiry = async (req, res) => {
 
     const authedUser = await User.findById(req.user.id).select('email firstName lastName title position category');
 
-    const categoryPermission = authedUser.category.find(cat => (cat.name === inquiry.inquiryCategory)
-                                                             ||(cat.name === inquiry.subCategory1)
-                                                             ||(cat.name === inquiry.subCategory2));
+    if(req.user.email !== process.env.SUPER_ADMIN_EMAIL){
 
-    if (categoryPermission && (categoryPermission.right === 0 || categoryPermission.right === 1 || categoryPermission.right === 2)) {
-      return res.status(403).json({ message: 'You do not have permission to approve this inquiry.' });
+      const categoryPermission = authedUser.category.find(cat => 
+       (cat.subCategory1 === inquiry.subCategory1)) || (cat.inquiryCategory === inquiry.inquiryCategory);
+      
+      if (categoryPermission && (categoryPermission.permission === "None" || categoryPermission.permission === "Passive" || categoryPermission.permission === "Active")) {
+        return res.status(403).json({ message: 'You do not have permission to approve this inquiry.' });
+      }
     }
   
     inquiry.status = 3;
