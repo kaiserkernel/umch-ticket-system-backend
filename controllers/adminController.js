@@ -141,38 +141,40 @@ const getInquiriesByEnrollmentNumber = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const inquiries = await Inquiry.find({ enrollmentNumber });
+    const inquiries = await Inquiry.find({ enrollmentNumber: enrollmentNumber});
 
     if (inquiries.length === 0) {
       return res
         .status(404)
         .json({ message: "No inquiries found for this enrollment number." });
+    }else{
+       return res.status(200).json(inquiries);
     }
 
-    const visibleCategories = new Set();
-    user.category.forEach((cat) => {
-      if (cat.permission !== "None") {
-        if (cat.subCategory1) visibleCategories.add(cat.subCategory1);
-        else visibleCategories.add(cat.inquiryCategory);
-      }
-    });
+    // const visibleCategories = new Set();
+    // user.category.forEach((cat) => {
+    //   if (cat.permission !== "None") {
+    //     if (cat.subCategory1) visibleCategories.add(cat.subCategory1);
+    //     else visibleCategories.add(cat.inquiryCategory);
+    //   }
+    // });
 
-    const filteredInquiries = inquiries.filter((inquiry) => {
-      return (
-        visibleCategories.has(inquiry.inquiryCategory) ||
-        visibleCategories.has(inquiry.subCategory1)
-      );
-    });
+    // const filteredInquiries = inquiries.filter((inquiry) => {
+    //   return (
+    //     visibleCategories.has(inquiry.inquiryCategory) ||
+    //     visibleCategories.has(inquiry.subCategory1)
+    //   );
+    // });
 
-    if (filteredInquiries.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No inquiries found within accessible categories." });
-    }
+    // if (filteredInquiries.length === 0) {
+    //   return res
+    //     .status(404)
+    //     .json({ message: "No inquiries found within accessible categories." });
+    // }
 
-    if (req.user.email === process.env.SUPER_ADMIN_EMAIL)
-      return res.status(200).json(inquiries);
-    else return res.status(200).json(filteredInquiries);
+    // if (req.user.email === process.env.SUPER_ADMIN_EMAIL)
+    //   return res.status(200).json(inquiries);
+    // else return res.status(200).json(filteredInquiries);
   } catch (error) {
     console.error(error);
     return res.status(500).json({
