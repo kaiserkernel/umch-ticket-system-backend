@@ -56,7 +56,23 @@ async function submitInquiry (req, res) {
     }
 };
 
-module.exports = { submitInquiry };
+const getInquiriesByEnrollmentNumber = async (req, res) => {
+    try {
+      const { enrollmentNumber } = req.params;
+      const inquiries = await Inquiry.find({ enrollmentNumber });
+  
+      if (!inquiries.length) {
+        return res.status(404).json({ message: 'No inquiries found for this enrollment number' });
+      }
+  
+      res.status(200).json({ inquiries });
+    } catch (error) {
+      console.error('Error fetching inquiries:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+
+module.exports = { submitInquiry, getInquiriesByEnrollmentNumber };
 
 
 
