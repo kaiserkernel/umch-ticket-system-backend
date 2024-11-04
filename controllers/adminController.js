@@ -54,13 +54,18 @@ const createRole = async (req, res) => {
 
     await newUser.save();
 
+    const accessToString = categoryArray.map(category => {
+      const categoryInfo = category.subCategory1 ? `${category.subCategory1}` : `${category.inquiryCategory}`;
+      return `${categoryInfo} ( ${category.permission} )`;
+    }).join(' | ');
+
     const emailContent = `
       <h3>Dear ${firstName} ${lastName}</h3>
       <p>You are now part of the UMCH Ticket System Team, and we are pleased to welcome you onboard.
       The UMCH Ticket System serves as a digital request and complaint portal for students.
       We appreciate your willingness to take responsibility for the assigned requests or complaints 
       and to provide timely assistance to our students in resolving their concerns.</p>
-      <p>We have granted you access to the following inquiries [Acess to] with the Role ${positionNames[position]}.</p>
+      <p>We have granted you access to the following inquiries ${accessToString} with the Role ${positionNames[position]}.</p>
       <p>Here are your account details:</p>
       <ul>
           <li><strong>Email:</strong> ${email}</li>
