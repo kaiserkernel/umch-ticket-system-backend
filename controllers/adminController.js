@@ -54,9 +54,9 @@ const createRole = async (req, res) => {
 
     await newUser.save();
 
-    const accessToString = categoryArray.map(category => {
-      const categoryInfo = category.subCategory1 ? `${category.subCategory1}` : `${category.inquiryCategory}`;
-      return `${categoryInfo} ( ${category.permission} )`;
+    const accessToString = category.map(item => {
+      const categoryInfo = item.subCategory1 ? `${item.subCategory1}` : `${item.inquiryCategory}`;
+      return `${categoryInfo} ( ${item.permission} )`;
     }).join(' | ');
 
     const emailContent = `
