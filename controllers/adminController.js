@@ -58,7 +58,7 @@ const createRole = async (req, res) => {
 
     const accessToString = category.map(item => {
       const categoryInfo = item.subCategory1 ? `${subCategoryNames[item.subCategory1]}` : `${inquriyCategoryNames[item.inquiryCategory]}`;
-      return `${categoryInfo} ( ${item.permission} )`;
+      return `<li>${categoryInfo} ( ${item.permission} )</li>`;
     }).join(' | ');
 
     const emailContent = `
@@ -67,7 +67,9 @@ const createRole = async (req, res) => {
       The UMCH Ticket System serves as a digital request and complaint portal for students.
       We appreciate your willingness to take responsibility for the assigned requests or complaints 
       and to provide timely assistance to our students in resolving their concerns.</p>
-      <p>We have granted you access to the following inquiries ${accessToString} with the Role ${positionNames[position]}.</p>
+      <p>We have granted you access to the following inquiries with the Role ${positionNames[position]}.</p>
+      <p>Here are inquiry details you can access:</p>
+      <ul>${accessToString}</ul> 
       <p>Here are your account details:</p>
       <ul>
           <li><strong>Email:</strong> ${email}</li>
@@ -191,6 +193,16 @@ const getInquiriesByEnrollmentNumber = async (req, res) => {
   }
 };
 
+// Get an inquiry by ID
+const getInquiryByID = async (req, res) => {
+  try {
+    const inquiry = await Inquiry.findById(req.params.id);
+    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
+    res.json({ inquiry});
+  } catch (error) {
+    res.status(500).json({ message: "Error checking inquiry", error });
+  }
+};
 // Check an inquiry
 const checkInquiry = async (req, res) => {
   try {
@@ -394,6 +406,7 @@ module.exports = {
   createRole,
   getUsers,
   getReceivedInquiries,
+  getInquiryByID,
   checkInquiry,
   acceptInquiry,
   rejectInquiry,

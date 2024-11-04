@@ -150,7 +150,31 @@ router.get('/inquiries/:enrollmentNumber', authMiddleware, getInquiriesByEnrollm
  *       500:
  *         description: Server error
  */
-router.patch('/inquiries/:id/check', authMiddleware, checkInquiry);
+router.patch('/inquiries/:id/', authMiddleware, checkInquiry);
+/**
+ * @swagger
+ * /api/admin/inquiries/{id}:
+ *   patch:
+ *     summary: Get an inquiry
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The inquiry ID
+ *     responses:
+ *       200:
+ *         description: Inquiry checked
+ *       404:
+ *         description: Inquiry not found
+ *       500:
+ *         description: Server error
+ */
+router.patch('/inquiries/:id', authMiddleware, getInquiryByID);
 
 /**
  * @swagger
