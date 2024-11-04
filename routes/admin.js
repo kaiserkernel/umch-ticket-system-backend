@@ -154,7 +154,7 @@ router.patch('/inquiries/:id/', authMiddleware, checkInquiry);
 /**
  * @swagger
  * /api/admin/inquiries/{id}:
- *   patch:
+ *   get:
  *     summary: Get an inquiry
  *     tags: [Admin]
  *     security:
@@ -174,7 +174,7 @@ router.patch('/inquiries/:id/', authMiddleware, checkInquiry);
  *       500:
  *         description: Server error
  */
-router.patch('/inquiries/:id', authMiddleware, getInquiryByID);
+router.get('/inquiries/:id', authMiddleware, getInquiryByID);
 
 /**
  * @swagger
