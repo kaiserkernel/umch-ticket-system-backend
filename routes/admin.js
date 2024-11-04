@@ -153,7 +153,7 @@ router.get('/inquiries/:enrollmentNumber', authMiddleware, getInquiriesByEnrollm
 router.patch('/inquiries/:id/', authMiddleware, checkInquiry);
 /**
  * @swagger
- * /api/admin/inquiries/{id}:
+ * /api/admin/inquiries/{id}/show:
  *   get:
  *     summary: Get an inquiry
  *     tags: [Admin]
@@ -174,7 +174,7 @@ router.patch('/inquiries/:id/', authMiddleware, checkInquiry);
  *       500:
  *         description: Server error
  */
-router.get('/inquiries/:id', authMiddleware, getInquiryByID);
+router.get('/inquiries/:id/show', authMiddleware, getInquiryByID);
 
 /**
  * @swagger
