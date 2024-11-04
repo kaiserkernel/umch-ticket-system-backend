@@ -5,6 +5,8 @@ const { sendEmail } = require("../services/mailjetService");
 
 require("dotenv").config();
 const positionNames = process.env.POSITION_NAMES.split(",");
+const subCategoryNames = process.env.SUB_CATEGORIES.split(",");
+const inquriyCategoryNames = process.env.INQUIRY_CATEGORIES.split(",");
 
 // Get all users
 const getUsers = async (req, res) => {
@@ -55,7 +57,7 @@ const createRole = async (req, res) => {
     await newUser.save();
 
     const accessToString = category.map(item => {
-      const categoryInfo = item.subCategory1 ? `${item.subCategory1}` : `${item.inquiryCategory}`;
+      const categoryInfo = item.subCategory1 ? `${subCategoryNames[item.subCategory1]}` : `${inquriyCategoryNames[item.inquiryCategory]}`;
       return `${categoryInfo} ( ${item.permission} )`;
     }).join(' | ');
 
@@ -301,11 +303,13 @@ const acceptInquiry = async (req, res) => {
     <p>${authedUser.email}</p>
     `;
 
+    const categoryName = inquiry.subCategory1?subCategoryNames[inquiry.subCategory1]:inquriyCategoryNames[inquiry.inquiryCategory];
+
     // Send the confirmation email
     await sendEmail(
       inquiry.email,
       inquiry.firstName + inquiry.lastName,
-      `Decision on Your Request of ${inquiry.inquiryCategory} - Ticket Number ${inquiry.inquiryNumber}!`,
+      `Decision on Your Request of ${categoryName} - Ticket Number ${inquiry.inquiryNumber}!`,
       `Dear ${inquiry.firstName} ${inquiry.lastName}`,
       emailContent
     );
@@ -366,11 +370,13 @@ const rejectInquiry = async (req, res) => {
     <p>${authedUser.email}</p>
     `;
 
+    const categoryName = inquiry.subCategory1?subCategoryNames[inquiry.subCategory1]:inquriyCategoryNames[inquiry.inquiryCategory];
+
     // Send the confirmation email
     await sendEmail(
       inquiry.email,
       inquiry.firstName + inquiry.lastName,
-      `Decision on Your Request of ${inquiry.inquiryCategory} - Ticket Number ${inquiry.inquiryNumber}!`,
+      `Decision on Your Request of ${categoryName} - Ticket Number ${inquiry.inquiryNumber}!`,
       `Dear ${inquiry.firstName} ${inquiry.lastName}`,
       emailContent
     );
