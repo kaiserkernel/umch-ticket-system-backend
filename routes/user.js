@@ -29,6 +29,8 @@ const router = express.Router();
  *               firstYearOfStudy:
  *                 type: integer
  *              
+ *               inquiryCategory:
+ *                 type: string
  *               subCategory1:
  *                 type: string
  *               subCategory2:

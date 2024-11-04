@@ -235,7 +235,7 @@ const checkInquiry = async (req, res) => {
     await sendEmail(
       inquiry.email,
       inquiry.firstName + " " + inquiry.lastName,
-      `Your ticket is being checked - Ticket Number ${inquiry.enrollmentNumber}!`,
+      `Your ticket is being checked - Ticket Number ${inquiry.inquiryNumber}!`,
       `Dear ${inquiry.firstName} ${inquiry.lastName}`,
       emailContent
     );
@@ -285,7 +285,7 @@ const acceptInquiry = async (req, res) => {
     <h>Dear ${inquiry.firstName} ${inquiry.lastName}</h>
     <p>Thank you for your request and for placing your trust in us. We have carefully reviewed your request and would like to inform you of the following decision:</p>
     <p>Congratulatjons! Your request has been approved.</p>
-    <p>Please make sure to inform your teachers about the decision and any subsequent steps you need to take. If you have any further questions or need additional clarification, feel free to <a href="https://umch-ticket-system.vercel.app/admin">contact us</a>.</p>
+    <p>Please make sure to inform your teachers about the decision and any subsequent steps you need to take. If you have any further questions or need additional clarification, feel free to <a href="https://umch-ticket-system.vercel.app/login">contact us</a>.</p>
     <p>Thank you for your understanding and cooperation.</p>
     <p>Best regards,</p>
     <p>${authedUser.firstName} ${authedUser.lastName}</p>
@@ -300,7 +300,7 @@ const acceptInquiry = async (req, res) => {
     await sendEmail(
       inquiry.email,
       inquiry.firstName + inquiry.lastName,
-      `Decision on Your Request of ${inquiry.inquiryCategory} - Ticket Number ${inquiry.enrollmentNumber}!`,
+      `Decision on Your Request of ${inquiry.inquiryCategory} - Ticket Number ${inquiry.inquiryNumber}!`,
       `Dear ${inquiry.firstName} ${inquiry.lastName}`,
       emailContent
     );
@@ -350,7 +350,7 @@ const rejectInquiry = async (req, res) => {
     <p>Thank you for your request and for placing your trust in us. We have carefully reviewed your request and would like to inform you of the following decision:</p>
     <p>We regret to inform you that your request has been declined. We understand this may be disappointing,
     and we encourage you to reach out if you have any questions about the decision or need further assistance.</p>
-    <p>If you have any further questions or need additional clarification, feel free to <a href="https://umch-ticket-system.vercel.app/admin">contact us</a>.</p>
+    <p>If you have any further questions or need additional clarification, feel free to <a href="https://umch-ticket-system.vercel.app/login">contact us</a>.</p>
     <p>Thank you for your understanding and cooperation.</p>
     <p>Best regards,</p>
     <p>${authedUser.firstName} ${authedUser.lastName}</p>
@@ -365,7 +365,7 @@ const rejectInquiry = async (req, res) => {
     await sendEmail(
       inquiry.email,
       inquiry.firstName + inquiry.lastName,
-      `Decision on Your Request of ${inquiry.inquiryCategory} - Ticket Number ${inquiry.enrollmentNumber}!`,
+      `Decision on Your Request of ${inquiry.inquiryCategory} - Ticket Number ${inquiry.inquiryNumber}!`,
       `Dear ${inquiry.firstName} ${inquiry.lastName}`,
       emailContent
     );

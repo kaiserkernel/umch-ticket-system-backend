@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Counter = require('./Counter');
 
 const inquirySchema = new mongoose.Schema({
     firstName: {
@@ -20,6 +21,7 @@ const inquirySchema = new mongoose.Schema({
     enrollmentNumber: {
       type: Number,
       required: true,
+      unique: true,
       trim: true,
     },
     firstYearOfStudy: {
@@ -57,15 +59,31 @@ const inquirySchema = new mongoose.Schema({
     },
     status:{
       type:Number,
-      enum:[0,1,2,3],
+      enum:[0,1,2,3,4],
       default:0,
       required:true,
     },
     reason:{
       type: String
     },
+    inquiryNumber: {
+      type: Number,
+      unique: true,
+    },
     createdAt: { type: Date, default: Date.now },
   });
   
+  inquirySchema.pre('save', async function (next) {
+    if (this.isNew) {
+      const counter = await Counter.findOneAndUpdate(
+        { _id: 'inquiryID' },
+        { $inc: { sequenceValue: 1 } },
+        { new: true, upsert: true }
+      );
+      this.inquiryNumber = counter.sequenceValue;
+    }
+    next();
+  });
+
   const Inquiry = mongoose.model('Inquiry', inquirySchema);
 module.exports = Inquiry;

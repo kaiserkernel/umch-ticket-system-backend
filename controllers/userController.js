@@ -30,7 +30,7 @@ async function submitInquiry (req, res) {
         const emailContent = `
         <h>Dear ${firstName} ${lastName}</h>
         <p>Thank you for submitting your ${inquiryCategory} on ${newInquiry.createdAt}. We have received your ticket and it is now
-        under review with the following Ticket Number: ${enrollmentNumber}.</p>
+        under review with the following Ticket Number: ${newInquiry.inquiryNumber}.</p>
         <p>We will get back to you shortly with further updates.
         Wishing you a great day, and we will follow up with more information soon.</p>
         <p>Best regards,</p>
