@@ -57,9 +57,9 @@ const createRole = async (req, res) => {
     await newUser.save();
 
     const accessToString = category.map(item => {
-      const categoryInfo = item.subCategory1 ? `${subCategoryNames[item.subCategory1]}` : `${inquriyCategoryNames[item.inquiryCategory]}`;
+      const categoryInfo = item.subCategory1 ? `${subCategoryNames[item.subCategory1-1]}` : `${inquriyCategoryNames[item.inquiryCategory-1]}`;
       return `<li>${categoryInfo} ( ${item.permission} )</li>`;
-    }).join(' | ');
+    }).join('');
 
     const emailContent = `
       <h3>Dear ${firstName} ${lastName}</h3>
@@ -315,7 +315,7 @@ const acceptInquiry = async (req, res) => {
     <p>${authedUser.email}</p>
     `;
 
-    const categoryName = inquiry.subCategory1?subCategoryNames[inquiry.subCategory1]:inquriyCategoryNames[inquiry.inquiryCategory];
+    const categoryName = inquiry.subCategory1?subCategoryNames[inquiry.subCategory1-1]:inquriyCategoryNames[inquiry.inquiryCategory-1];
 
     // Send the confirmation email
     await sendEmail(
@@ -382,7 +382,7 @@ const rejectInquiry = async (req, res) => {
     <p>${authedUser.email}</p>
     `;
 
-    const categoryName = inquiry.subCategory1?subCategoryNames[inquiry.subCategory1]:inquriyCategoryNames[inquiry.inquiryCategory];
+    const categoryName = inquiry.subCategory1?subCategoryNames[inquiry.subCategory1-1]:inquriyCategoryNames[inquiry.inquiryCategory-1];
 
     // Send the confirmation email
     await sendEmail(
