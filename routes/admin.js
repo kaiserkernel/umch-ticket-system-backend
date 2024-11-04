@@ -1,5 +1,5 @@
 const express = require('express');
-const { createRole, getUsers, getReceivedInquiries, getInquiriesByEnrollmentNumber,checkInquiry, rejectInquiry, acceptInquiry } = require('../controllers/adminController');
+const { createRole, getUsers, getReceivedInquiries, getInquiriesByEnrollmentNumber,checkInquiry, getInquiryByID, rejectInquiry, acceptInquiry } = require('../controllers/adminController');
 const checkSuperAdmin = require('../middlewares/checkSuperAdmin');
 const authMiddleware = require('../middlewares/authMiddleware');
 const createRoleValidator = require('../middlewares/createRoleValidator');
