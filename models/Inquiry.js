@@ -20,7 +20,6 @@ const inquirySchema = new mongoose.Schema({
     enrollmentNumber: {
       type: Number,
       required: true,
-      unique: true,
       trim: true,
     },
     firstYearOfStudy: {
