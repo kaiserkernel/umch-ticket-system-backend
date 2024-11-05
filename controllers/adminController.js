@@ -213,10 +213,20 @@ const getInquiriesByEnrollmentNumber = async (req, res) => {
 // Get an inquiry by ID
 const getInquiryByID = async (req, res) => {
   try {
-    const inquiry = await Inquiry.findById(req.params.id);
-    console.log(inquiry);
-    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
-    res.json({ inquiry });
+    const result = await Inquiry.findById(req.params.id);
+    console.log(result);
+    if (result.status == 0) {
+      result.status = 1;
+      await result.save();
+
+      const inquiry = await Inquiry.findById(req.params.id);
+      if (!result)
+        return result.status(404).json({ message: "Inquiry not found" });
+      res.json({ inquiry });
+    } else {
+      console.log("status is not 0");
+      res.json({ inquiry: result });
+    }
   } catch (error) {
     res.status(500).json({ message: "Error checking inquiry", error });
   }
