@@ -8,6 +8,16 @@ const positionNames = process.env.POSITION_NAMES.split(",");
 const subCategoryNames = process.env.SUB_CATEGORIES.split(",");
 const inquriyCategoryNames = process.env.INQUIRY_CATEGORIES.split(",");
 
+const INQUIRYCATEGORIES = [
+  "Applications and Requests",
+  "Book rental UMCH library",
+  "Campus IT",
+  "Complaints",
+  "Internship",
+  "Medical Abilities",
+  "Thesis",
+  "Other",
+];
 // Get all users
 const getUsers = async (req, res) => {
   try {
@@ -56,10 +66,14 @@ const createRole = async (req, res) => {
 
     await newUser.save();
 
-    const accessToString = category.map(item => {
-      const categoryInfo = item.subCategory1 ? `${subCategoryNames[item.subCategory1-1]}` : `${inquriyCategoryNames[item.inquiryCategory-1]}`;
-      return `<li>${categoryInfo} ( ${item.permission} )</li>`;
-    }).join('');
+    const accessToString = category
+      .map((item) => {
+        const categoryInfo = item.subCategory1
+          ? `${subCategoryNames[item.subCategory1 - 1]}`
+          : `${inquriyCategoryNames[item.inquiryCategory - 1]}`;
+        return `<li>${categoryInfo} ( ${item.permission} )</li>`;
+      })
+      .join("");
 
     const emailContent = `
       <h3>Dear ${firstName} ${lastName}</h3>
@@ -132,7 +146,8 @@ const getReceivedInquiries = async (req, res) => {
 
     if (req.user.email === process.env.SUPER_ADMIN_EMAIL)
       res.json({ inquiries, userCategory: user.category });
-    else res.json({ inquiries: filteredInquiries, userCategory: user.category });
+    else
+      res.json({ inquiries: filteredInquiries, userCategory: user.category });
   } catch (error) {
     res.status(500).json({ message: "Error fetching inquiries", error });
   }
@@ -150,14 +165,16 @@ const getInquiriesByEnrollmentNumber = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const inquiries = await Inquiry.find({ enrollmentNumber: enrollmentNumber});
+    const inquiries = await Inquiry.find({
+      enrollmentNumber: enrollmentNumber,
+    });
 
     if (inquiries.length === 0) {
       return res
         .status(404)
         .json({ message: "No inquiries found for this enrollment number." });
-    }else{
-       return res.status(200).json(inquiries);
+    } else {
+      return res.status(200).json(inquiries);
     }
 
     // const visibleCategories = new Set();
@@ -199,7 +216,7 @@ const getInquiryByID = async (req, res) => {
     const inquiry = await Inquiry.findById(req.params.id);
     console.log(inquiry);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
-    res.json({ inquiry});
+    res.json({ inquiry });
   } catch (error) {
     res.status(500).json({ message: "Error checking inquiry", error });
   }
@@ -236,12 +253,15 @@ const checkInquiry = async (req, res) => {
     await inquiry.save();
 
     const emailContent = `
-    <h>Dear ${inquiry.firstName} ${inquiry.lastName}</h>
-    <p>Your ticket ${inquiry.enrollmentNumber} on ${
-      inquiry.inquiryCategory
-    } submitted at ${inquiry.createdAt} is under checking now.</p>
+    <h>Dear <strong>${inquiry.firstName} ${inquiry.lastName}</strong></h>
+    <p>Your ticket <strong>${inquiry.inquiryNumber}<strong> on <strong> ${
+      INQUIRYCATEGORIES[inquiry.inquiryCategory - 1]
+    }</strong> submitted at <strong>${
+      inquiry.createdAt
+    }</strong> is under checking now.</p>
     <p>We will get back to you shortly with further updates.
     Wishing you a great day, and we will follow up with more information soon.</p>
+    <br />
     <p>Best regards,</p>
     <p>${authedUser.firstName} ${authedUser.lastName}</p>
     <p>${authedUser.title ? authedUser.title : "Professor"}</p>
@@ -302,10 +322,13 @@ const acceptInquiry = async (req, res) => {
     await inquiry.save();
 
     const emailContent = `
-    <h>Dear ${inquiry.firstName} ${inquiry.lastName}</h>
+    <h>Dear <strong>${inquiry.firstName} ${inquiry.lastName}</strong></h>
     <p>Thank you for your request and for placing your trust in us. We have carefully reviewed your request and would like to inform you of the following decision:</p>
+    <br />
     <p>Congratulatjons! Your request has been approved.</p>
     <p>Please make sure to inform your teachers about the decision and any subsequent steps you need to take. If you have any further questions or need additional clarification, feel free to <a href="https://umch-ticket-system.vercel.app/login">contact us</a>.</p>
+    <p><strong> (Ticket not closed / reopen again)</p></strong>
+    <br />
     <p>Thank you for your understanding and cooperation.</p>
     <p>Best regards,</p>
     <p>${authedUser.firstName} ${authedUser.lastName}</p>
@@ -316,7 +339,9 @@ const acceptInquiry = async (req, res) => {
     <p>${authedUser.email}</p>
     `;
 
-    const categoryName = inquiry.subCategory1?subCategoryNames[inquiry.subCategory1-1]:inquriyCategoryNames[inquiry.inquiryCategory-1];
+    const categoryName = inquiry.subCategory1
+      ? subCategoryNames[inquiry.subCategory1 - 1]
+      : inquriyCategoryNames[inquiry.inquiryCategory - 1];
 
     // Send the confirmation email
     await sendEmail(
@@ -368,11 +393,18 @@ const rejectInquiry = async (req, res) => {
     await inquiry.save();
 
     const emailContent = `
-    <h>Dear ${inquiry.firstName} ${inquiry.lastName}</h>
+    <h>Dear <strong>${inquiry.firstName} ${inquiry.lastName}</strong></h>
     <p>Thank you for your request and for placing your trust in us. We have carefully reviewed your request and would like to inform you of the following decision:</p>
+
+    <br />
     <p>We regret to inform you that your request has been declined. We understand this may be disappointing,
     and we encourage you to reach out if you have any questions about the decision or need further assistance.</p>
+    
+    <br />
     <p>If you have any further questions or need additional clarification, feel free to <a href="https://umch-ticket-system.vercel.app/login">contact us</a>.</p>
+    <p><strong>(Ticket not close up / reopen again)</strong></p>
+
+    <br />
     <p>Thank you for your understanding and cooperation.</p>
     <p>Best regards,</p>
     <p>${authedUser.firstName} ${authedUser.lastName}</p>
@@ -383,7 +415,9 @@ const rejectInquiry = async (req, res) => {
     <p>${authedUser.email}</p>
     `;
 
-    const categoryName = inquiry.subCategory1?subCategoryNames[inquiry.subCategory1-1]:inquriyCategoryNames[inquiry.inquiryCategory-1];
+    const categoryName = inquiry.subCategory1
+      ? subCategoryNames[inquiry.subCategory1 - 1]
+      : inquriyCategoryNames[inquiry.inquiryCategory - 1];
 
     // Send the confirmation email
     await sendEmail(
