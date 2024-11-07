@@ -34,13 +34,13 @@ async function submitInquiry(req, res) {
 
     (async () => {
       try {
-        const result = await convertHtmlToPdf(req.body);
-        console.log(result, "====convert thml");
-        documents.push({
-          url: result, // result contains the PDF URL returned from convertHtmlToPdf
-          filename: `Credential.pdf`, // Example filename for the generated PDF
-        });
-        console.log(documents, "====documents");
+        // if (subCategory1 == 5 || subCategory1 == "5") {
+        //   const result = await convertHtmlToPdf(req.body);
+        //   documents.push({
+        //     url: result, // result contains the PDF URL returned from convertHtmlToPdf
+        //     filename: `Credential.pdf`, // Example filename for the generated PDF
+        //   });
+        // }
 
         const newInquiry = new Inquiry({
           firstName,

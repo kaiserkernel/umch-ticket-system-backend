@@ -1,8 +1,10 @@
 const pdf = require("html-pdf");
 
-async function convertHtmlToPdf(info) {
-  const { firstName, lastName, details, agreement } = info;
-  const convertedDetail = JSON.parse(details);
+async function convertHtmlToPdf(info, studentNo) {
+  const detail = info.details;
+  console.log(detail, "=========details");
+  //   const convertedDetails = JSON.parse(detail);
+  //   console.log(convertedDetails, "=====converted  detail");
 
   const outputPath = "public/uploads/documents/";
   const fileName = Date.now() + ".pdf";
@@ -38,7 +40,7 @@ async function convertHtmlToPdf(info) {
     <body>
       <div class="content-box">
         <span class="number">Reg. no.:</span>
-        <span class="small">10520 / ……………./…………………….</span>
+        <span class="small">10520 / [studentNo].</span>
       </div>
       <div>
         <p class="content-info">CERTIFICATE OF ENROLLMENT</p>
@@ -58,10 +60,16 @@ async function convertHtmlToPdf(info) {
   </html>
   `;
 
-  const content = htmlContent
-    .replace("[fullname]", firstName + " " + lastName)
-    .replace("[nationality]", convertedDetail["nationality"])
-    .replace("[studyofyear]", convertedDetail["currentYearOfStudy"]);
+  let content = "";
+  try {
+    content = htmlContent
+      .replace("[fullname]", info?.firstName + " " + info?.lastName)
+      .replace("[nationality]", detail["nationality"])
+      .replace("[studyofyear]", detail["currentYearOfStudy"])
+      .replace("[studentNo]", studentNo);
+  } catch (err) {
+    console.log(err);
+  }
 
   return new Promise((resolve, reject) => {
     pdf

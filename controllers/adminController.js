@@ -2,6 +2,7 @@ const { validationResult } = require("express-validator");
 const User = require("../models/User");
 const Inquiry = require("../models/Inquiry");
 const { sendEmail } = require("../services/mailjetService");
+const { convertHtmlToPdf } = require("../services/wordConvertService");
 
 require("dotenv").config();
 const positionNames = process.env.POSITION_NAMES.split(",");
@@ -213,9 +214,13 @@ const getInquiriesByEnrollmentNumber = async (req, res) => {
 // Get an inquiry by ID
 const getInquiryByID = async (req, res) => {
   try {
+    const authedUser = await User.findById(req.user.id).select(
+      "email firstName lastName role title position category"
+    );
+
     const result = await Inquiry.findById(req.params.id);
     console.log(result);
-    if (result.status == 0) {
+    if (result.status == 0 && authedUser?.role != 2) {
       result.status = 1;
       await result.save();
 
@@ -345,10 +350,92 @@ const acceptInquiry = async (req, res) => {
       `Dear ${inquiry.firstName} ${inquiry.lastName}`,
       replacedEmailTemplate
     );
+    const updatedInquiry = await Inquiry.findById(id);
+    res.json({
+      message: "Inquiry accepted and sent confirmation message",
+      inquiry: updatedInquiry,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error accepting inquiry", error });
+  }
+};
+
+const acceptEnrollmentInquiry = async (req, res) => {
+  console.log(req.body, "====accept enrollment inquiry");
+  const {
+    replaceSubject,
+    replacedEmailTemplate,
+    id,
+    studentNo,
+    selectedTicket,
+  } = req.body;
+
+  try {
+    const inquiry = await Inquiry.findById(id);
+    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
+
+    const authedUser = await User.findById(req.user.id).select(
+      "email firstName lastName title position category"
+    );
+
+    if (req.user.email !== process.env.SUPER_ADMIN_EMAIL) {
+      const categoryPermission = authedUser.category.find(
+        (cat) =>
+          cat.subCategory1 === inquiry.subCategory1 ||
+          cat.inquiryCategory === inquiry.inquiryCategory
+      );
+
+      if (
+        categoryPermission &&
+        (categoryPermission.permission === "None" ||
+          categoryPermission.permission === "Passive" ||
+          categoryPermission.permission === "Active")
+      ) {
+        return res.status(403).json({
+          message: "You do not have permission to approve this inquiry.",
+        });
+      }
+    }
+
+    (async () => {
+      try {
+        let documents;
+        const result = await convertHtmlToPdf(selectedTicket, studentNo);
+        documents = selectedTicket.documents;
+        documents.push({
+          url: result, // result contains the PDF URL returned from convertHtmlToPdf
+          filename: `Credential.pdf`, // Example filename for the generated PDF
+        });
+
+        inquiry.status = 2;
+        await inquiry.save();
+        inquiry.documents = documents;
+        await inquiry.save();
+
+        console.log(documents, "====enrollment  documents");
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    })();
+
+    const categoryName = inquiry.subCategory1
+      ? subCategoryNames[inquiry.subCategory1 - 1]
+      : inquriyCategoryNames[inquiry.inquiryCategory - 1];
+
+    // Send the confirmation email
+    await sendEmail(
+      inquiry.email,
+      inquiry.firstName + inquiry.lastName,
+      `Decision on Your Request of ${categoryName} - Ticket Number ${inquiry.inquiryNumber}!`,
+      `Dear ${inquiry.firstName} ${inquiry.lastName}`,
+      replacedEmailTemplate
+    );
+
+    const updatedInquiry = await Inquiry.findById(id);
 
     res.json({
       message: "Inquiry accepted and sent confirmation message",
-      inquiry,
+      inquiry: updatedInquiry,
     });
   } catch (error) {
     res.status(500).json({ message: "Error accepting inquiry", error });
@@ -399,10 +486,10 @@ const rejectInquiry = async (req, res) => {
       `Dear ${inquiry.firstName} ${inquiry.lastName}`,
       replacedEmailTemplate
     );
-
+    const updatedInquiry = await Inquiry.findById(id);
     res.json({
       message: "Inquiry rejected and confirmation email sent",
-      inquiry,
+      inquiry: updatedInquiry,
     });
   } catch (error) {
     res.status(500).json({ message: "Error rejecting inquiry", error });
@@ -437,4 +524,5 @@ module.exports = {
   rejectInquiry,
   getInquiriesByEnrollmentNumber,
   reOpenTicket,
+  acceptEnrollmentInquiry,
 };

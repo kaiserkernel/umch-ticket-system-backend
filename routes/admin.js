@@ -9,6 +9,7 @@ const {
   rejectInquiry,
   acceptInquiry,
   reOpenTicket,
+  acceptEnrollmentInquiry,
 } = require("../controllers/adminController");
 const checkSuperAdmin = require("../middlewares/checkSuperAdmin");
 const authMiddleware = require("../middlewares/authMiddleware");
@@ -241,5 +242,11 @@ router.post("/inquiries/accept", authMiddleware, acceptInquiry);
 router.post("/inquiries/reject", authMiddleware, rejectInquiry);
 
 router.post("/inquiries/reOpenTicket", authMiddleware, reOpenTicket);
+
+router.post(
+  "/inquiries/enrollment/accept",
+  authMiddleware,
+  acceptEnrollmentInquiry
+);
 
 module.exports = router;
