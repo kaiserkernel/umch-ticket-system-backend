@@ -301,8 +301,10 @@ const checkInquiry = async (req, res) => {
 
 // Accept an inquiry
 const acceptInquiry = async (req, res) => {
+  console.log(req.body, "====accept inquiry");
+  const { replaceSubject, replacedEmailTemplate, id } = req.body;
   try {
-    const inquiry = await Inquiry.findById(req.params.id);
+    const inquiry = await Inquiry.findById(id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
 
     const authedUser = await User.findById(req.user.id).select(
@@ -331,24 +333,6 @@ const acceptInquiry = async (req, res) => {
     inquiry.status = 2;
     await inquiry.save();
 
-    const emailContent = `
-    <h>Dear <strong>${inquiry.firstName} ${inquiry.lastName}</strong></h>
-    <p>Thank you for your request and for placing your trust in us. We have carefully reviewed your request and would like to inform you of the following decision:</p>
-    <br />
-    <p>Congratulatjons! Your request has been approved.</p>
-    <p>Please make sure to inform your teachers about the decision and any subsequent steps you need to take. If you have any further questions or need additional clarification, feel free to <a href="https://umch-ticket-system.vercel.app/login">contact us</a>.</p>
-    <p><strong> (Ticket not closed / reopen again)</p></strong>
-    <br />
-    <p>Thank you for your understanding and cooperation.</p>
-    <p>Best regards,</p>
-    <p>${authedUser.firstName} ${authedUser.lastName}</p>
-    <p>${authedUser.title ? authedUser.title : "Professor"}</p>
-    <p>${
-      authedUser.position ? positionNames[authedUser.position] : "Vice Rector"
-    }</p>
-    <p>${authedUser.email}</p>
-    `;
-
     const categoryName = inquiry.subCategory1
       ? subCategoryNames[inquiry.subCategory1 - 1]
       : inquriyCategoryNames[inquiry.inquiryCategory - 1];
@@ -359,7 +343,7 @@ const acceptInquiry = async (req, res) => {
       inquiry.firstName + inquiry.lastName,
       `Decision on Your Request of ${categoryName} - Ticket Number ${inquiry.inquiryNumber}!`,
       `Dear ${inquiry.firstName} ${inquiry.lastName}`,
-      emailContent
+      replacedEmailTemplate
     );
 
     res.json({
@@ -373,8 +357,9 @@ const acceptInquiry = async (req, res) => {
 
 // Reject an inquiry
 const rejectInquiry = async (req, res) => {
+  const { replaceSubject, replacedEmailTemplate, id } = req.body;
   try {
-    const inquiry = await Inquiry.findById(req.params.id);
+    const inquiry = await Inquiry.findById(id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
 
     const authedUser = await User.findById(req.user.id).select(
@@ -402,29 +387,6 @@ const rejectInquiry = async (req, res) => {
     inquiry.status = 3;
     await inquiry.save();
 
-    const emailContent = `
-    <h>Dear <strong>${inquiry.firstName} ${inquiry.lastName}</strong></h>
-    <p>Thank you for your request and for placing your trust in us. We have carefully reviewed your request and would like to inform you of the following decision:</p>
-
-    <br />
-    <p>We regret to inform you that your request has been declined. We understand this may be disappointing,
-    and we encourage you to reach out if you have any questions about the decision or need further assistance.</p>
-    
-    <br />
-    <p>If you have any further questions or need additional clarification, feel free to <a href="https://umch-ticket-system.vercel.app/login">contact us</a>.</p>
-    <p><strong>(Ticket not close up / reopen again)</strong></p>
-
-    <br />
-    <p>Thank you for your understanding and cooperation.</p>
-    <p>Best regards,</p>
-    <p>${authedUser.firstName} ${authedUser.lastName}</p>
-    <p>${authedUser.title ? authedUser.title : "Professor"}</p>
-    <p>${
-      authedUser.position ? positionNames[authedUser.position] : "Vice Rector"
-    }</p>
-    <p>${authedUser.email}</p>
-    `;
-
     const categoryName = inquiry.subCategory1
       ? subCategoryNames[inquiry.subCategory1 - 1]
       : inquriyCategoryNames[inquiry.inquiryCategory - 1];
@@ -435,7 +397,7 @@ const rejectInquiry = async (req, res) => {
       inquiry.firstName + inquiry.lastName,
       `Decision on Your Request of ${categoryName} - Ticket Number ${inquiry.inquiryNumber}!`,
       `Dear ${inquiry.firstName} ${inquiry.lastName}`,
-      emailContent
+      replacedEmailTemplate
     );
 
     res.json({
@@ -444,6 +406,24 @@ const rejectInquiry = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: "Error rejecting inquiry", error });
+  }
+};
+
+const reOpenTicket = async (req, res) => {
+  const { ticket_id } = req.body;
+  try {
+    const inquiry = await Inquiry.findById(ticket_id);
+    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
+
+    inquiry.status = 0;
+    await inquiry.save();
+
+    res.json({
+      message: "Inquiry was reopened",
+      inquiry,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error reopen inquiry", error });
   }
 };
 
@@ -456,4 +436,5 @@ module.exports = {
   acceptInquiry,
   rejectInquiry,
   getInquiriesByEnrollmentNumber,
+  reOpenTicket,
 };

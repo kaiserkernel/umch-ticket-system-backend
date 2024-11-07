@@ -26,7 +26,8 @@ exports.register = async (req, res) => {
 
   if (role === "2" && (!enrollmentNumber || !firstYearOfStudy)) {
     return res.status(400).json({
-      message: "Enrollment number and first year of study are required for students.",
+      message:
+        "Enrollment number and first year of study are required for students.",
     });
   }
 
@@ -52,7 +53,9 @@ exports.register = async (req, res) => {
       role,
       enrollmentNumber: role === "2" ? enrollmentNumber : undefined,
       firstYearOfStudy: role === "2" ? firstYearOfStudy : undefined,
-      avatar: req.file ? `/uploads/images/avatar/${req.file.filename}` : undefined,
+      avatar: req.file
+        ? `/uploads/images/avatar/${req.file.filename}`
+        : undefined,
     });
 
     await newUser.save();
@@ -62,7 +65,6 @@ exports.register = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 exports.login = async (req, res) => {
   const errors = validationResult(req);
@@ -77,38 +79,39 @@ exports.login = async (req, res) => {
       email ? { email } : { enrollmentNumber }
     ).select("+password");
 
-    if (!user){
-      if(email) return res.status(401).json({ message: "Invalid email" });
-      if(enrollmentNumber) return res.status(401).json({ message: "Invalid enrollment number" });
-    } 
+    if (!user) {
+      if (email) return res.status(401).json({ message: "Invalid email" });
+      if (enrollmentNumber)
+        return res.status(401).json({ message: "Invalid enrollment number" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials" });
-    
-    if(email && user.role !== 0){
-      return res.status(403).json({ message: 'Access forbidden: Admins only' });
+
+    if (email && user.role !== 0) {
+      return res.status(403).json({ message: "Access forbidden: Admins only" });
     }
     const payload = { id: user._id, email: user.email, role: user.role };
 
-    const token = await jwt.sign(payload, secret, { expiresIn: '24h' });
+    const token = await jwt.sign(payload, secret);
 
     if (!token) return res.status(500).json({ error: "Error signing token" });
 
     const userData = {
       email: user.email,
-      firstName:user.firstName,
+      firstName: user.firstName,
       lastName: user.lastName,
       enrollmentNumber: user.enrollmentNumber,
       role: user.role,
-      firstYearOfStudy:user.firstYearOfStudy,
-      avatar: user.avatar
+      firstYearOfStudy: user.firstYearOfStudy,
+      avatar: user.avatar,
     };
 
     return res.json({
       success: true,
       token: `Bearer ${token}`,
-      userData: userData
+      userData: userData,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

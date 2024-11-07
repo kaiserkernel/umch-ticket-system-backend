@@ -1,5 +1,6 @@
 const Inquiry = require("../models/Inquiry");
 const { sendEmail } = require("../services/mailjetService");
+const { convertHtmlToPdf } = require("../services/wordConvertService");
 require("dotenv").config();
 
 const INQUIRYCATEGORIES = [
@@ -31,30 +32,41 @@ async function submitInquiry(req, res) {
       filename: file.originalname,
     }));
 
-    const newInquiry = new Inquiry({
-      firstName,
-      lastName,
-      email,
-      enrollmentNumber,
-      firstYearOfStudy,
-      inquiryCategory,
-      subCategory1,
-      subCategory2,
-      details: JSON.parse(details),
-      agreement,
-      documents,
-      status: 0,
-    });
+    (async () => {
+      try {
+        const result = await convertHtmlToPdf(req.body);
+        console.log(result, "====convert thml");
+        documents.push({
+          url: result, // result contains the PDF URL returned from convertHtmlToPdf
+          filename: `Credential.pdf`, // Example filename for the generated PDF
+        });
+        console.log(documents, "====documents");
 
-    await newInquiry.save();
+        const newInquiry = new Inquiry({
+          firstName,
+          lastName,
+          email,
+          enrollmentNumber,
+          firstYearOfStudy,
+          inquiryCategory,
+          subCategory1,
+          subCategory2,
+          details: JSON.parse(details),
+          agreement,
+          documents,
+          status: 0,
+        });
 
-    const emailContent = `
+        console.log(documents, "====newinquiry documents");
+        await newInquiry.save();
+
+        const emailContent = `
          <p><strong>Dear ${firstName} ${lastName},</strong></p>
         <p>Thank you for submitting your <strong> ${
           INQUIRYCATEGORIES[inquiryCategory - 1]
         }</strong> on <strong> ${
-      newInquiry.createdAt
-    }.</strong> We have received your ticket and it is now
+          newInquiry.createdAt
+        }.</strong> We have received your ticket and it is now
         under review with the following Ticket Number: <strong> ${
           newInquiry.inquiryNumber
         }.</strong>
@@ -64,25 +76,30 @@ async function submitInquiry(req, res) {
         <br />
         <p>Best regards,</p>
         <p>${process.env.SUPER_ADMIN_FIRSTNAME} ${
-      process.env.SUPER_ADMIN_LASTNAME
-    } </p>
+          process.env.SUPER_ADMIN_LASTNAME
+        } </p>
         <p>Professor</p>
         <p>Vice Rector</p>
         <p><${process.env.SUPER_ADMIN_EMAIL}</p>
         `;
 
-    // Send the confirmation email
-    await sendEmail(
-      email,
-      firstName + " " + lastName,
-      `Your Ticket Submission Confirmation - Ticket Number ${newInquiry.inquiryNumber}!`,
-      `Dear ${firstName} ${lastName}`,
-      emailContent
-    );
+        // Send the confirmation email
+        await sendEmail(
+          email,
+          firstName + " " + lastName,
+          `Your Ticket Submission Confirmation - Ticket Number ${newInquiry.inquiryNumber}!`,
+          `Dear ${firstName} ${lastName}`,
+          emailContent
+        );
 
-    return res
-      .status(201)
-      .json({ message: "Inquiry submitted successfully", inquiry: newInquiry });
+        return res.status(201).json({
+          message: "Inquiry submitted successfully",
+          inquiry: newInquiry,
+        });
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    })();
   } catch (error) {
     console.error("Error submitting inquiry:", error);
     return res.status(500).json({ error: "Failed to submit inquiry" });

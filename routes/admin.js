@@ -1,8 +1,18 @@
-const express = require('express');
-const { createRole, getUsers, getReceivedInquiries, getInquiriesByEnrollmentNumber,checkInquiry, getInquiryByID, rejectInquiry, acceptInquiry } = require('../controllers/adminController');
-const checkSuperAdmin = require('../middlewares/checkSuperAdmin');
-const authMiddleware = require('../middlewares/authMiddleware');
-const createRoleValidator = require('../middlewares/createRoleValidator');
+const express = require("express");
+const {
+  createRole,
+  getUsers,
+  getReceivedInquiries,
+  getInquiriesByEnrollmentNumber,
+  checkInquiry,
+  getInquiryByID,
+  rejectInquiry,
+  acceptInquiry,
+  reOpenTicket,
+} = require("../controllers/adminController");
+const checkSuperAdmin = require("../middlewares/checkSuperAdmin");
+const authMiddleware = require("../middlewares/authMiddleware");
+const createRoleValidator = require("../middlewares/createRoleValidator");
 
 const router = express.Router();
 
@@ -68,7 +78,7 @@ const router = express.Router();
  *         description: Server error
  */
 
-router.post('/create-role', createRoleValidator, createRole);
+router.post("/create-role", createRoleValidator, createRole);
 
 /**
  * @swagger
@@ -86,7 +96,7 @@ router.post('/create-role', createRoleValidator, createRole);
  *       500:
  *         description: Server error
  */
-router.get('/get-users', authMiddleware, checkSuperAdmin, getUsers);
+router.get("/get-users", authMiddleware, checkSuperAdmin, getUsers);
 
 /**
  * @swagger
@@ -102,7 +112,7 @@ router.get('/get-users', authMiddleware, checkSuperAdmin, getUsers);
  *       500:
  *         description: Server error
  */
-router.get('/inquiries', authMiddleware, getReceivedInquiries);
+router.get("/inquiries", authMiddleware, getReceivedInquiries);
 
 /**
  * @swagger
@@ -125,7 +135,11 @@ router.get('/inquiries', authMiddleware, getReceivedInquiries);
  *       404:
  *         description: No inquiries found for this enrollment number
  */
-router.get('/inquiries/:enrollmentNumber', authMiddleware, getInquiriesByEnrollmentNumber);
+router.get(
+  "/inquiries/:enrollmentNumber",
+  authMiddleware,
+  getInquiriesByEnrollmentNumber
+);
 
 /**
  * @swagger
@@ -150,7 +164,7 @@ router.get('/inquiries/:enrollmentNumber', authMiddleware, getInquiriesByEnrollm
  *       500:
  *         description: Server error
  */
-router.patch('/inquiries/:id/check', authMiddleware, checkInquiry);
+router.patch("/inquiries/:id/check", authMiddleware, checkInquiry);
 /**
  * @swagger
  * /api/admin/inquiries/{id}/show:
@@ -174,7 +188,7 @@ router.patch('/inquiries/:id/check', authMiddleware, checkInquiry);
  *       500:
  *         description: Server error
  */
-router.get('/inquiries/:id/show', authMiddleware, getInquiryByID);
+router.get("/inquiries/:id/show", authMiddleware, getInquiryByID);
 
 /**
  * @swagger
@@ -199,7 +213,7 @@ router.get('/inquiries/:id/show', authMiddleware, getInquiryByID);
  *       500:
  *         description: Server error
  */
-router.patch('/inquiries/:id/accept', authMiddleware, acceptInquiry);
+router.post("/inquiries/accept", authMiddleware, acceptInquiry);
 
 /**
  * @swagger
@@ -224,6 +238,8 @@ router.patch('/inquiries/:id/accept', authMiddleware, acceptInquiry);
  *       500:
  *         description: Server error
  */
-router.patch('/inquiries/:id/reject', authMiddleware, rejectInquiry);
+router.post("/inquiries/reject", authMiddleware, rejectInquiry);
+
+router.post("/inquiries/reOpenTicket", authMiddleware, reOpenTicket);
 
 module.exports = router;
