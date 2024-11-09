@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "umch-ticket-system",
+  "private_key_id": "a5a854ca38b85f6246e90b774938be790000c11e",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDHKfZJ0oY7ce92\npbbhXNHcH+FALDadqcdb/sRb2QStfJ89u3IIBNfX+mUnTkilaIUz8JvtwGspc0CR\ngCHLiOwOcTWTh/W6LMu/0yb2sSBy2mSoge5Xc2YoXDwOXSlFBKJuHEL48RsgE3YZ\noLav3gVmOmsL1jJnLBX8ioie256dgSW51iYuus3W6IVnCp7HkI5NRdBpQ2bMyAKQ\nAdIgcKLNZrGjkQ+jUouzzvZGi0kRkPvGjxuBqxXXfqCt/t6KCFX5s/tSRAOsPGa2\nzIJ7OrOwMbAuvvVJfv3m+/41o5ASJ8dzayXSX+JvC/XfAJ3mYrQBu0UacF8am4rN\nLltlTLKBAgMBAAECggEAE2CcINSbJh97ZUzRkp2oTBrMnKTF75MRiCbXzfk7Fkdg\nwEMuNg+FPJ3qcjzl899LznY42un0wy9TzJRDNX1Ykj3Q26NydK8KZ9slwwIQHnyX\nJzn1CYx7F67Zp6rIFXn89RT02H8E3PBny4MyeGvz6d1XMECiiMfmSmWOzf303G1a\nBCuL9AyCGIVxHtXMhozgUiizxdPekMDLJBSJCum0DB8GPNYvqIKmoZCcr0WZiMwB\nPCL0WLVTZzCHOtRkkqAvDTx84AcpHxQT5sayQXm52fQKN8m+HKcgl1C/zmh8HCJj\nuzLH1HZbdjjaWrUXwWdlasV+7aAf3c9En4RKPwqkDQKBgQDqNZe4BepDpfEvHqUi\nAX2KymyjBCH6bQLXADSwR4Yx6RIGnCUFI80F6roxXzRWyIojGdofZYljFlu7GjUF\nqT8fANjS0KMrqWm7gBTH6iB+VQxtAuG4SkdP1ATXPQB+VQZmaJM9VB1+KqDxpnDB\n2gBelIm2wSvEY0qp9iCoY1c3NwKBgQDZsafsEWBK0orKO9wm2vm5sKglOT/QNjO+\nSF0IY3p0gye6QDcQuE5MpUJJmVi1FURhG1k55gZQAjhAl8c/hgiRjpMnd/N6Cmcq\nV9Dw08a9cgjYAjR/j4POGEPHApUF9rycoDccyJR8JU3AezsItrOB+KH4bfE8hFy0\nZ4Lcqx9QBwKBgBoIzQ2qsqjEaHP5bxfBnKfx6nOQgQpqVbd6kWDLApLHurY7Yy4Y\nFbFDr2DPmWzQK/LM698zlTsLgDTjK+OuNZMHsBJ3GLxAv70U9rpmPyhr4c64VEj9\nEMJB6ivW3xgr8WMu2rclg4XDzVIvUzdpOUNKNai3/lp9Qw5zipvNNyOvAoGBAIzp\nuJ7QaJpGSty5froQCJIwTcc6lZn7W+cSBFaHvh5pP3AKXRqPku9+Ebh+cLNWvtp0\nz37w7KkhprP5C1qNMkK2HX7w4EPhNAJusasSCpVamWrpkn33sgPYJRdPDpO7sT9Z\nXhNdqu/pXbj4i7AKQ4wgGwgqcnsP2spULpsUkcJFAoGBAMfgF3DOLkNNshuX8JuH\nYoQ+EWLoaVCtF+rtp9nkthAH4+audZFbbxo9N7E2/j0KDk6Te+EqPBl3knsJ76yT\n8wZUNzCGy1eVt8xEX07KrNdrxAD7Py1BmGSGDl4oMBNcHF+Sf3riRuESh70V/pnR\nMWyJOnxqxlfTAT1Xz5l8Vb0i\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-gtnmt@umch-ticket-system.iam.gserviceaccount.com",
+  "client_id": "100772269312690203537",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-gtnmt%40umch-ticket-system.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
