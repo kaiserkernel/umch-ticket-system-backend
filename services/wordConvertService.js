@@ -1,7 +1,7 @@
 const pdf = require("html-pdf");
 
-async function convertHtmlToPdf(info, studentNo) {
-  const detail = info.details;
+async function convertHtmlToPdf(formData, selectedTicket) {
+  const detail = formData;
   console.log(detail, "=========details");
   //   const convertedDetails = JSON.parse(detail);
   //   console.log(convertedDetails, "=====converted  detail");
@@ -63,10 +63,13 @@ async function convertHtmlToPdf(info, studentNo) {
   let content = "";
   try {
     content = htmlContent
-      .replace("[fullname]", info?.firstName + " " + info?.lastName)
+      .replace(
+        "[fullname]",
+        selectedTicket?.firstName + " " + selectedTicket?.lastName
+      )
       .replace("[nationality]", detail["nationality"])
       .replace("[studyofyear]", detail["currentYearOfStudy"])
-      .replace("[studentNo]", studentNo);
+      .replace("[studentNo]", detail["studentNo"]);
   } catch (err) {
     console.log(err);
   }

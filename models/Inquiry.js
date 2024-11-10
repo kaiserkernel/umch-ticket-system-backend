@@ -5,73 +5,81 @@ const inquirySchema = new mongoose.Schema({
   firstName: {
     type: String,
     required: true,
-    trim: true,
+    trim: true
   },
   lastName: {
     type: String,
     required: true,
-    trim: true,
+    trim: true
   },
   email: {
     type: String,
     required: true,
     trim: true,
-    match: /.+\@.+\..+/,
+    match: /.+\@.+\..+/
   },
   enrollmentNumber: {
     type: Number,
     required: true,
-    trim: true,
+    trim: true
   },
   firstYearOfStudy: {
     type: Number,
     required: true,
-    min: 1900,
+    min: 1900
   },
   inquiryCategory: {
     type: String,
-    required: true,
+    required: true
   },
   subCategory1: {
-    type: String,
+    type: String
   },
   subCategory2: {
-    type: String,
+    type: String
   },
   details: {
     type: Object,
-    required: true,
+    required: true
   },
   documents: [
     {
       url: {
         type: String,
-        required: false,
+        required: false
       },
       filename: {
         type: String,
-        required: false,
-      },
-    },
+        required: false
+      }
+    }
   ],
   agreement: {
     type: Boolean,
-    required: true,
+    required: true
   },
   status: {
     type: Number,
-    enum: [0, 1, 2, 3, 4],
+    enum: [0, 1, 2, 3, 4, 5, 6],
     default: 0,
-    required: true,
+    required: true
+  },
+  isClicked: {
+    type: Number,
+    enum: [0, 1],
+    default: 0
+  },
+  emailContent: {
+    type: String
   },
   reason: {
-    type: String,
+    type: String
   },
   inquiryNumber: {
     type: Number,
-    unique: true,
+    unique: true
   },
-  createdAt: { type: Date, default: Date.now },
+  createdAt: { type: Date, default: Date.now }
 });
 
 inquirySchema.pre("save", async function (next) {

@@ -17,7 +17,7 @@ const INQUIRYCATEGORIES = [
   "Internship",
   "Medical Abilities",
   "Thesis",
-  "Other",
+  "Other"
 ];
 // Get all users
 const getUsers = async (req, res) => {
@@ -45,7 +45,7 @@ const createRole = async (req, res) => {
     role,
     position,
     title,
-    category,
+    category
   } = req.body;
 
   try {
@@ -62,7 +62,7 @@ const createRole = async (req, res) => {
       role,
       position,
       title,
-      category,
+      category
     });
 
     await newUser.save();
@@ -167,7 +167,7 @@ const getInquiriesByEnrollmentNumber = async (req, res) => {
     }
 
     const inquiries = await Inquiry.find({
-      enrollmentNumber: enrollmentNumber,
+      enrollmentNumber: enrollmentNumber
     });
 
     if (inquiries.length === 0) {
@@ -206,7 +206,7 @@ const getInquiriesByEnrollmentNumber = async (req, res) => {
     console.error(error);
     return res.status(500).json({
       message: "An error occurred while retrieving inquiries.",
-      error,
+      error
     });
   }
 };
@@ -219,19 +219,29 @@ const getInquiryByID = async (req, res) => {
     );
 
     const result = await Inquiry.findById(req.params.id);
+    let isOriginalClicked = false;
     console.log(result);
+    if (result.isClicked === 1) {
+      isOriginalClicked = true;
+    }
     if (result.status == 0 && authedUser?.role != 2) {
       result.status = 1;
-      await result.save();
-
-      const inquiry = await Inquiry.findById(req.params.id);
-      if (!result)
-        return result.status(404).json({ message: "Inquiry not found" });
-      res.json({ inquiry });
-    } else {
-      console.log("status is not 0");
-      res.json({ inquiry: result });
+      result.isClicked = 1;
     }
+    if (result.status == 2 && authedUser?.role != 2) {
+      result.isClicked = 1;
+    }
+    if (result.status == 3 && authedUser?.role != 2) {
+      result.isClicked = 1;
+    }
+
+    await result.save();
+
+    const inquiry = await Inquiry.findById(req.params.id);
+    if (!inquiry) res.status(404).json({ message: "Inquiry not found" });
+    res
+      .status(201)
+      .json({ inquiry: inquiry, isOriginalClicked: isOriginalClicked });
   } catch (error) {
     res.status(500).json({ message: "Error checking inquiry", error });
   }
@@ -259,7 +269,7 @@ const checkInquiry = async (req, res) => {
           categoryPermission.permission === "Passive")
       ) {
         return res.status(403).json({
-          message: "You do not have permission to check this inquiry.",
+          message: "You do not have permission to check this inquiry."
         });
       }
     }
@@ -297,7 +307,7 @@ const checkInquiry = async (req, res) => {
 
     res.json({
       message: "Inquiry checked and sent confirmation message",
-      inquiry,
+      inquiry
     });
   } catch (error) {
     res.status(500).json({ message: "Error checking inquiry", error });
@@ -330,12 +340,15 @@ const acceptInquiry = async (req, res) => {
           categoryPermission.permission === "Active")
       ) {
         return res.status(403).json({
-          message: "You do not have permission to approve this inquiry.",
+          message: "You do not have permission to approve this inquiry."
         });
       }
     }
 
     inquiry.status = 2;
+    inquiry.isClicked = 0;
+    inquiry.emailContent = replacedEmailTemplate;
+    console.log(inquiry);
     await inquiry.save();
 
     const categoryName = inquiry.subCategory1
@@ -353,7 +366,7 @@ const acceptInquiry = async (req, res) => {
     const updatedInquiry = await Inquiry.findById(id);
     res.json({
       message: "Inquiry accepted and sent confirmation message",
-      inquiry: updatedInquiry,
+      inquiry: updatedInquiry
     });
   } catch (error) {
     res.status(500).json({ message: "Error accepting inquiry", error });
@@ -368,9 +381,11 @@ const acceptEnrollmentInquiry = async (req, res) => {
     id,
     studentNo,
     selectedTicket,
+    formData
   } = req.body;
 
   try {
+    let result;
     const inquiry = await Inquiry.findById(id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
 
@@ -392,7 +407,7 @@ const acceptEnrollmentInquiry = async (req, res) => {
           categoryPermission.permission === "Active")
       ) {
         return res.status(403).json({
-          message: "You do not have permission to approve this inquiry.",
+          message: "You do not have permission to approve this inquiry."
         });
       }
     }
@@ -400,45 +415,184 @@ const acceptEnrollmentInquiry = async (req, res) => {
     (async () => {
       try {
         let documents;
-        const result = await convertHtmlToPdf(selectedTicket, studentNo);
+        result = await convertHtmlToPdf(formData, selectedTicket);
         documents = selectedTicket.documents;
         documents.push({
           url: result, // result contains the PDF URL returned from convertHtmlToPdf
-          filename: `Credential.pdf`, // Example filename for the generated PDF
+          filename: `Credential.pdf` // Example filename for the generated PDF
         });
 
         inquiry.status = 2;
+        inquiry.isClicked = 0;
         await inquiry.save();
         inquiry.documents = documents;
+        inquiry.emailContent = replacedEmailTemplate;
+        console.log(inquiry);
         await inquiry.save();
 
         console.log(documents, "====enrollment  documents");
+
+        const categoryName = inquiry.subCategory1
+          ? subCategoryNames[inquiry.subCategory1 - 1]
+          : inquriyCategoryNames[inquiry.inquiryCategory - 1];
+
+        // Send the confirmation email
+        console.log(result, "====result");
+        await sendEmail(
+          inquiry.email,
+          inquiry.firstName + inquiry.lastName,
+          `Your Enrollment Certificate -  Ticket Number ${inquiry.inquiryNumber}!`,
+          `Dear ${inquiry.firstName} ${inquiry.lastName}`,
+          replacedEmailTemplate,
+          result
+        );
+
+        const updatedInquiry = await Inquiry.findById(id);
+
+        res.json({
+          message: "Inquiry accepted and sent confirmation message",
+          inquiry: updatedInquiry
+        });
       } catch (error) {
         console.error("Error:", error);
       }
     })();
-
-    const categoryName = inquiry.subCategory1
-      ? subCategoryNames[inquiry.subCategory1 - 1]
-      : inquriyCategoryNames[inquiry.inquiryCategory - 1];
-
-    // Send the confirmation email
-    await sendEmail(
-      inquiry.email,
-      inquiry.firstName + inquiry.lastName,
-      `Decision on Your Request of ${categoryName} - Ticket Number ${inquiry.inquiryNumber}!`,
-      `Dear ${inquiry.firstName} ${inquiry.lastName}`,
-      replacedEmailTemplate
-    );
-
-    const updatedInquiry = await Inquiry.findById(id);
-
-    res.json({
-      message: "Inquiry accepted and sent confirmation message",
-      inquiry: updatedInquiry,
-    });
   } catch (error) {
     res.status(500).json({ message: "Error accepting inquiry", error });
+  }
+};
+
+const acceptExamInspection = async (req, res) => {
+  console.log(req.body, "====accept enrollment inquiry");
+  const {
+    replaceSubject,
+    replacedEmailTemplate,
+    id,
+    selectedTicket,
+    formData
+  } = req.body;
+
+  try {
+    let result;
+    const inquiry = await Inquiry.findById(id);
+    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
+
+    const authedUser = await User.findById(req.user.id).select(
+      "email firstName lastName title position category"
+    );
+
+    if (req.user.email !== process.env.SUPER_ADMIN_EMAIL) {
+      const categoryPermission = authedUser.category.find(
+        (cat) =>
+          cat.subCategory1 === inquiry.subCategory1 ||
+          cat.inquiryCategory === inquiry.inquiryCategory
+      );
+
+      if (
+        categoryPermission &&
+        (categoryPermission.permission === "None" ||
+          categoryPermission.permission === "Passive" ||
+          categoryPermission.permission === "Active")
+      ) {
+        return res.status(403).json({
+          message: "You do not have permission to approve this inquiry."
+        });
+      }
+    }
+
+    try {
+      let documents;
+
+      inquiry.status = 2;
+      inquiry.isClicked = 0;
+      await inquiry.save();
+
+      inquiry.emailContent = replacedEmailTemplate;
+      console.log(inquiry);
+      await inquiry.save();
+
+      const categoryName = inquiry.subCategory1
+        ? subCategoryNames[inquiry.subCategory1 - 1]
+        : inquriyCategoryNames[inquiry.inquiryCategory - 1];
+
+      // Send the confirmation email
+      console.log(result, "====result");
+
+      await sendEmail(
+        inquiry.email,
+        inquiry.firstName + inquiry.lastName,
+        ` Approval for Exam Review – Confirmation Required -  Ticket Number ${inquiry.inquiryNumber}!`,
+        `Dear ${inquiry.firstName} ${inquiry.lastName}`,
+        replacedEmailTemplate,
+        result
+      );
+
+      const updatedInquiry = await Inquiry.findById(id);
+
+      res.json({
+        message: "Inquiry accepted and sent confirmation message",
+        inquiry: updatedInquiry
+      });
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Error accepting inquiry", error });
+  }
+};
+
+const processTranscriptRecord = async (req, res) => {
+  const { id } = req.params;
+  console.log(req.params);
+  try {
+    const inquiry = await Inquiry.findById(id);
+    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
+    inquiry.status = 4;
+    inquiry.isClicked = 0;
+    await inquiry.save();
+    const updatedInquiry = await Inquiry.findById(id);
+    res.json({
+      message: "Inquiry was updated to Process Status",
+      inquiry: updatedInquiry
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error rejecting inquiry", error });
+  }
+};
+const doneTranscriptRecord = async (req, res) => {
+  const { id } = req.params;
+  console.log(req.params);
+  try {
+    const inquiry = await Inquiry.findById(id);
+    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
+    inquiry.status = 5;
+    inquiry.isClicked = 0;
+    await inquiry.save();
+    const updatedInquiry = await Inquiry.findById(id);
+    res.json({
+      message: "Inquiry was updated to Done Status",
+      inquiry: updatedInquiry
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error rejecting inquiry", error });
+  }
+};
+const NotifyTranscriptRecord = async (req, res) => {
+  const { id } = req.params;
+  console.log(req.params);
+  try {
+    const inquiry = await Inquiry.findById(id);
+    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
+    inquiry.status = 6;
+    inquiry.isClicked = 0;
+    await inquiry.save();
+    const updatedInquiry = await Inquiry.findById(id);
+    res.json({
+      message: "Inquiry was updated to Notify Status",
+      inquiry: updatedInquiry
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error rejecting inquiry", error });
   }
 };
 
@@ -466,12 +620,13 @@ const rejectInquiry = async (req, res) => {
           categoryPermission.permission === "Active")
       ) {
         return res.status(403).json({
-          message: "You do not have permission to approve this inquiry.",
+          message: "You do not have permission to approve this inquiry."
         });
       }
     }
 
     inquiry.status = 3;
+    inquiry.isClicked = 0;
     await inquiry.save();
 
     const categoryName = inquiry.subCategory1
@@ -489,7 +644,7 @@ const rejectInquiry = async (req, res) => {
     const updatedInquiry = await Inquiry.findById(id);
     res.json({
       message: "Inquiry rejected and confirmation email sent",
-      inquiry: updatedInquiry,
+      inquiry: updatedInquiry
     });
   } catch (error) {
     res.status(500).json({ message: "Error rejecting inquiry", error });
@@ -497,17 +652,18 @@ const rejectInquiry = async (req, res) => {
 };
 
 const reOpenTicket = async (req, res) => {
-  const { ticket_id } = req.body;
+  const { ticket_id, reason } = req.body;
   try {
     const inquiry = await Inquiry.findById(ticket_id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
 
     inquiry.status = 0;
+    inquiry.reason = reason;
     await inquiry.save();
 
     res.json({
       message: "Inquiry was reopened",
-      inquiry,
+      inquiry
     });
   } catch (error) {
     res.status(500).json({ message: "Error reopen inquiry", error });
@@ -525,4 +681,8 @@ module.exports = {
   getInquiriesByEnrollmentNumber,
   reOpenTicket,
   acceptEnrollmentInquiry,
+  acceptExamInspection,
+  processTranscriptRecord,
+  doneTranscriptRecord,
+  NotifyTranscriptRecord
 };

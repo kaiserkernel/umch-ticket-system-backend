@@ -11,7 +11,7 @@ const INQUIRYCATEGORIES = [
   "Internship",
   "Medical Abilities",
   "Thesis",
-  "Other",
+  "Other"
 ];
 async function submitInquiry(req, res) {
   try {
@@ -25,23 +25,15 @@ async function submitInquiry(req, res) {
       subCategory1,
       subCategory2,
       details,
-      agreement,
+      agreement
     } = req.body;
     const documents = req.files.map((file) => ({
       url: `/uploads/documents/${file.filename}`,
-      filename: file.originalname,
+      filename: file.originalname
     }));
 
     (async () => {
       try {
-        // if (subCategory1 == 5 || subCategory1 == "5") {
-        //   const result = await convertHtmlToPdf(req.body);
-        //   documents.push({
-        //     url: result, // result contains the PDF URL returned from convertHtmlToPdf
-        //     filename: `Credential.pdf`, // Example filename for the generated PDF
-        //   });
-        // }
-
         const newInquiry = new Inquiry({
           firstName,
           lastName,
@@ -54,7 +46,7 @@ async function submitInquiry(req, res) {
           details: JSON.parse(details),
           agreement,
           documents,
-          status: 0,
+          status: 0
         });
 
         console.log(documents, "====newinquiry documents");
@@ -94,7 +86,7 @@ async function submitInquiry(req, res) {
 
         return res.status(201).json({
           message: "Inquiry submitted successfully",
-          inquiry: newInquiry,
+          inquiry: newInquiry
         });
       } catch (error) {
         console.error("Error:", error);

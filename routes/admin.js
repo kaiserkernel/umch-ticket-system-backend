@@ -10,6 +10,10 @@ const {
   acceptInquiry,
   reOpenTicket,
   acceptEnrollmentInquiry,
+  acceptExamInspection,
+  processTranscriptRecord,
+  doneTranscriptRecord,
+  NotifyTranscriptRecord
 } = require("../controllers/adminController");
 const checkSuperAdmin = require("../middlewares/checkSuperAdmin");
 const authMiddleware = require("../middlewares/authMiddleware");
@@ -242,6 +246,27 @@ router.post("/inquiries/accept", authMiddleware, acceptInquiry);
 router.post("/inquiries/reject", authMiddleware, rejectInquiry);
 
 router.post("/inquiries/reOpenTicket", authMiddleware, reOpenTicket);
+router.get(
+  "/inquiries/processTranscriptRecord/:id",
+  authMiddleware,
+  processTranscriptRecord
+);
+router.get(
+  "/inquiries/doneTranscriptRecord/:id",
+  authMiddleware,
+  doneTranscriptRecord
+);
+router.get(
+  "/inquiries/notifyTranscriptRecord/:id",
+  authMiddleware,
+  NotifyTranscriptRecord
+);
+
+router.post(
+  "/inquiries/examInspection/accept",
+  authMiddleware,
+  acceptExamInspection
+);
 
 router.post(
   "/inquiries/enrollment/accept",
