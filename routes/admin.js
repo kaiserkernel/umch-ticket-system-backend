@@ -13,7 +13,8 @@ const {
   acceptExamInspection,
   processTranscriptRecord,
   doneTranscriptRecord,
-  NotifyTranscriptRecord
+  NotifyTranscriptRecord,
+  sendPassEmail
 } = require("../controllers/adminController");
 const checkSuperAdmin = require("../middlewares/checkSuperAdmin");
 const authMiddleware = require("../middlewares/authMiddleware");
@@ -273,5 +274,7 @@ router.post(
   authMiddleware,
   acceptEnrollmentInquiry
 );
+
+router.post("/send-pass-email", authMiddleware, sendPassEmail);
 
 module.exports = router;

@@ -640,18 +640,57 @@ const reOpenTicket = async (req, res) => {
   try {
     const inquiry = await Inquiry.findById(ticket_id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
-    console.log(inquiry, "======original inquiry");
+
     inquiry.status = 0;
     inquiry.reason = reason;
     await inquiry.save();
     const updatedInquirynquiry = await Inquiry.findById(ticket_id);
-    console.log(updatedInquirynquiry, "======updated inquiry");
+
     res.json({
       message: "Inquiry was reopened",
       inquiry: updatedInquirynquiry
     });
   } catch (error) {
     res.status(500).json({ message: "Error reopen inquiry", error });
+  }
+};
+
+const sendPassEmail = async (req, res) => {
+  const { selectedOptions, selectedTicket } = req.body;
+  let emailContent =
+    "<p>Full Name: " +
+    selectedTicket?.firstName +
+    " " +
+    selectedTicket?.lastName +
+    "</p>" +
+    "<p>Enrollment Number:" +
+    selectedTicket?.enrollmentNumber +
+    "</p><br />";
+
+  Object.entries(selectedTicket?.details).forEach(([key, value]) => {
+    console.log(`Key: ${key}, Value: ${value}`);
+    emailContent =
+      emailContent + "<p>" + key + ":" + "<span>" + value + "</span>" + "</p>";
+  });
+
+  try {
+    const results = await Promise.all(
+      selectedOptions.map(async (option) => {
+        // Send the confirmation email
+        await sendEmail(
+          option?.value,
+          selectedTicket?.firstName + selectedTicket?.lastName,
+          "Inquiry Information for Pass To Another Department",
+          "Inquiry Information for Pass To Another Department",
+          emailContent
+        );
+      })
+    );
+    res.json({ message: "Email was sent" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error sending Pass To Other Department Email" });
   }
 };
 
@@ -669,5 +708,6 @@ module.exports = {
   acceptExamInspection,
   processTranscriptRecord,
   doneTranscriptRecord,
-  NotifyTranscriptRecord
+  NotifyTranscriptRecord,
+  sendPassEmail
 };
