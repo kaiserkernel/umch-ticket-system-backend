@@ -256,8 +256,8 @@ router.get(
   authMiddleware,
   doneTranscriptRecord
 );
-router.get(
-  "/inquiries/notifyTranscriptRecord/:id",
+router.post(
+  "/inquiries/notifyTranscriptRecord",
   authMiddleware,
   NotifyTranscriptRecord
 );

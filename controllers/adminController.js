@@ -124,31 +124,44 @@ const getReceivedInquiries = async (req, res) => {
     const user = await User.findById(req.user.id).select("category");
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "Category not found" });
     }
 
     const inquiries = await Inquiry.find();
 
-    const visibleCategories = new Set();
+    // const visibleCategories = new Set();
 
-    user.category.forEach((cat) => {
-      if (cat.permission !== "None") {
-        if (cat.subCategory1) visibleCategories.add(cat.subCategory1);
-        else visibleCategories.add(cat.inquiryCategory);
-      }
-    });
+    // user.category.forEach((cat) => {
+    //   if (cat.permission !== "None") {
+    //     if (cat.subCategory1) visibleCategories.add(cat.subCategory1);
+    //     else visibleCategories.add(cat.inquiryCategory);
+    //   }
+    // });
 
-    const filteredInquiries = inquiries.filter((inquiry) => {
-      return (
-        visibleCategories.has(inquiry.inquiryCategory) ||
-        visibleCategories.has(inquiry.subCategory1)
+    // const filteredInquiries = inquiries.filter((inquiry) => {
+    //   return (
+    //     visibleCategories.has(inquiry.inquiryCategory) ||
+    //     visibleCategories.has(inquiry.subCategory1)
+    //   );
+    // });
+
+    const filteredTickets = inquiries.filter((ticket) => {
+      // Find the matching permission for this ticket
+      const permission = user?.category.find(
+        (p) =>
+          p.inquiryCategory === ticket.inquiryCategory &&
+          p.subCategory1 === ticket.subCategory1
       );
+
+      // If the permission is not 'None', the ticket is visible
+      return permission && permission.permission !== "None";
     });
+
+    console.log(filteredTickets, "===filteredTickets");
 
     if (req.user.email === process.env.SUPER_ADMIN_EMAIL)
-      res.json({ inquiries, userCategory: user.category });
-    else
-      res.json({ inquiries: filteredInquiries, userCategory: user.category });
+      res.json({ inquiries: inquiries, userCategory: user.category });
+    else res.json({ inquiries: filteredTickets, userCategory: user.category });
   } catch (error) {
     res.status(500).json({ message: "Error fetching inquiries", error });
   }
@@ -228,7 +241,13 @@ const getInquiryByID = async (req, res) => {
       result.status = 1;
       result.isClicked = 1;
     }
-    if (result.status == 2 && authedUser?.role != 2) {
+    if (
+      (result.status == 2 ||
+        result.status == 4 ||
+        result.status == 5 ||
+        result.status == 6) &&
+      authedUser?.role != 2
+    ) {
       result.isClicked = 1;
     }
     if (result.status == 3 && authedUser?.role != 2) {
@@ -255,24 +274,6 @@ const checkInquiry = async (req, res) => {
     const authedUser = await User.findById(req.user.id).select(
       "email firstName lastName title position category"
     );
-
-    if (req.user.email !== process.env.SUPER_ADMIN_EMAIL) {
-      const categoryPermission = authedUser.category.find(
-        (cat) =>
-          cat.subCategory1 === inquiry.subCategory1 ||
-          cat.inquiryCategory === inquiry.inquiryCategory
-      );
-
-      if (
-        categoryPermission &&
-        (categoryPermission.permission === "None" ||
-          categoryPermission.permission === "Passive")
-      ) {
-        return res.status(403).json({
-          message: "You do not have permission to check this inquiry."
-        });
-      }
-    }
 
     inquiry.status = 1;
     await inquiry.save();
@@ -326,28 +327,13 @@ const acceptInquiry = async (req, res) => {
       "email firstName lastName title position category"
     );
 
-    if (req.user.email !== process.env.SUPER_ADMIN_EMAIL) {
-      const categoryPermission = authedUser.category.find(
-        (cat) =>
-          cat.subCategory1 === inquiry.subCategory1 ||
-          cat.inquiryCategory === inquiry.inquiryCategory
-      );
-
-      if (
-        categoryPermission &&
-        (categoryPermission.permission === "None" ||
-          categoryPermission.permission === "Passive" ||
-          categoryPermission.permission === "Active")
-      ) {
-        return res.status(403).json({
-          message: "You do not have permission to approve this inquiry."
-        });
-      }
-    }
-
     inquiry.status = 2;
     inquiry.isClicked = 0;
-    inquiry.emailContent = replacedEmailTemplate;
+    const updatedHtmlContent = replacedEmailTemplate.replace(
+      /<a [^>]*>(.*?)<\/a>/g,
+      "<a>$1</a>"
+    );
+    inquiry.emailContent = updatedHtmlContent;
     console.log(inquiry);
     await inquiry.save();
 
@@ -393,25 +379,6 @@ const acceptEnrollmentInquiry = async (req, res) => {
       "email firstName lastName title position category"
     );
 
-    if (req.user.email !== process.env.SUPER_ADMIN_EMAIL) {
-      const categoryPermission = authedUser.category.find(
-        (cat) =>
-          cat.subCategory1 === inquiry.subCategory1 ||
-          cat.inquiryCategory === inquiry.inquiryCategory
-      );
-
-      if (
-        categoryPermission &&
-        (categoryPermission.permission === "None" ||
-          categoryPermission.permission === "Passive" ||
-          categoryPermission.permission === "Active")
-      ) {
-        return res.status(403).json({
-          message: "You do not have permission to approve this inquiry."
-        });
-      }
-    }
-
     (async () => {
       try {
         let documents;
@@ -426,7 +393,11 @@ const acceptEnrollmentInquiry = async (req, res) => {
         inquiry.isClicked = 0;
         await inquiry.save();
         inquiry.documents = documents;
-        inquiry.emailContent = replacedEmailTemplate;
+        const updatedHtmlContent = replacedEmailTemplate.replace(
+          /<a [^>]*>(.*?)<\/a>/g,
+          "<a>$1</a>"
+        );
+        inquiry.emailContent = updatedHtmlContent;
         console.log(inquiry);
         await inquiry.save();
 
@@ -481,25 +452,6 @@ const acceptExamInspection = async (req, res) => {
       "email firstName lastName title position category"
     );
 
-    if (req.user.email !== process.env.SUPER_ADMIN_EMAIL) {
-      const categoryPermission = authedUser.category.find(
-        (cat) =>
-          cat.subCategory1 === inquiry.subCategory1 ||
-          cat.inquiryCategory === inquiry.inquiryCategory
-      );
-
-      if (
-        categoryPermission &&
-        (categoryPermission.permission === "None" ||
-          categoryPermission.permission === "Passive" ||
-          categoryPermission.permission === "Active")
-      ) {
-        return res.status(403).json({
-          message: "You do not have permission to approve this inquiry."
-        });
-      }
-    }
-
     try {
       let documents;
 
@@ -507,7 +459,11 @@ const acceptExamInspection = async (req, res) => {
       inquiry.isClicked = 0;
       await inquiry.save();
 
-      inquiry.emailContent = replacedEmailTemplate;
+      const updatedHtmlContent = replacedEmailTemplate.replace(
+        /<a [^>]*>(.*?)<\/a>/g,
+        "<a>$1</a>"
+      );
+      inquiry.emailContent = updatedHtmlContent;
       console.log(inquiry);
       await inquiry.save();
 
@@ -578,21 +534,62 @@ const doneTranscriptRecord = async (req, res) => {
   }
 };
 const NotifyTranscriptRecord = async (req, res) => {
-  const { id } = req.params;
-  console.log(req.params);
+  // const { id } = req.params;
+  // console.log(req.params);
+  // try {
+  //   const inquiry = await Inquiry.findById(id);
+  //   if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
+  //   inquiry.status = 6;
+  //   inquiry.isClicked = 0;
+  //   await inquiry.save();
+  //   const updatedInquiry = await Inquiry.findById(id);
+  //   res.json({
+  //     message: "Inquiry was updated to Notify Status",
+  //     inquiry: updatedInquiry
+  //   });
+  // } catch (error) {
+  //   res.status(500).json({ message: "Error rejecting inquiry", error });
+  // }
+
+  console.log(req.body, "====accept inquiry");
+  const { replaceSubject, replacedEmailTemplate, id } = req.body;
   try {
     const inquiry = await Inquiry.findById(id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
+
+    const authedUser = await User.findById(req.user.id).select(
+      "email firstName lastName title position category"
+    );
+
     inquiry.status = 6;
     inquiry.isClicked = 0;
+    const updatedHtmlContent = replacedEmailTemplate.replace(
+      /<a [^>]*>(.*?)<\/a>/g,
+      "<a>$1</a>"
+    );
+    inquiry.emailContent = updatedHtmlContent;
+    console.log(inquiry);
     await inquiry.save();
+
+    const categoryName = inquiry.subCategory1
+      ? subCategoryNames[inquiry.subCategory1 - 1]
+      : inquriyCategoryNames[inquiry.inquiryCategory - 1];
+
+    // Send the confirmation email
+    await sendEmail(
+      inquiry.email,
+      inquiry.firstName + inquiry.lastName,
+      `Decision on Your Request of ${categoryName} - Ticket Number ${inquiry.inquiryNumber}!`,
+      `Dear ${inquiry.firstName} ${inquiry.lastName}`,
+      replacedEmailTemplate
+    );
     const updatedInquiry = await Inquiry.findById(id);
     res.json({
-      message: "Inquiry was updated to Notify Status",
+      message: "Inquiry accepted and sent confirmation message",
       inquiry: updatedInquiry
     });
   } catch (error) {
-    res.status(500).json({ message: "Error rejecting inquiry", error });
+    res.status(500).json({ message: "Error accepting inquiry", error });
   }
 };
 
@@ -607,26 +604,13 @@ const rejectInquiry = async (req, res) => {
       "email firstName lastName title position category"
     );
 
-    if (req.user.email !== process.env.SUPER_ADMIN_EMAIL) {
-      const categoryPermission =
-        authedUser.category.find(
-          (cat) => cat.subCategory1 === inquiry.subCategory1
-        ) || cat.inquiryCategory === inquiry.inquiryCategory;
-
-      if (
-        categoryPermission &&
-        (categoryPermission.permission === "None" ||
-          categoryPermission.permission === "Passive" ||
-          categoryPermission.permission === "Active")
-      ) {
-        return res.status(403).json({
-          message: "You do not have permission to approve this inquiry."
-        });
-      }
-    }
-
     inquiry.status = 3;
     inquiry.isClicked = 0;
+    const updatedHtmlContent = replacedEmailTemplate.replace(
+      /<a [^>]*>(.*?)<\/a>/g,
+      "<a>$1</a>"
+    );
+    inquiry.emailContent = updatedHtmlContent;
     await inquiry.save();
 
     const categoryName = inquiry.subCategory1
@@ -656,14 +640,15 @@ const reOpenTicket = async (req, res) => {
   try {
     const inquiry = await Inquiry.findById(ticket_id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
-
+    console.log(inquiry, "======original inquiry");
     inquiry.status = 0;
     inquiry.reason = reason;
     await inquiry.save();
-
+    const updatedInquirynquiry = await Inquiry.findById(ticket_id);
+    console.log(updatedInquirynquiry, "======updated inquiry");
     res.json({
       message: "Inquiry was reopened",
-      inquiry
+      inquiry: updatedInquirynquiry
     });
   } catch (error) {
     res.status(500).json({ message: "Error reopen inquiry", error });
