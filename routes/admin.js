@@ -14,7 +14,8 @@ const {
   processTranscriptRecord,
   doneTranscriptRecord,
   NotifyTranscriptRecord,
-  sendPassEmail
+  sendPassEmail,
+  acceptTransferTarguMuresInquiry
 } = require("../controllers/adminController");
 const checkSuperAdmin = require("../middlewares/checkSuperAdmin");
 const authMiddleware = require("../middlewares/authMiddleware");
@@ -273,6 +274,12 @@ router.post(
   "/inquiries/enrollment/accept",
   authMiddleware,
   acceptEnrollmentInquiry
+);
+
+router.post(
+  "/inquiries/transferTarguMures/accept",
+  authMiddleware,
+  acceptTransferTarguMuresInquiry
 );
 
 router.post("/send-pass-email", authMiddleware, sendPassEmail);
