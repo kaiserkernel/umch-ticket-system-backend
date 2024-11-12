@@ -1,6 +1,6 @@
 const express = require('express');
-const { submitInquiry, getInquiriesByEnrollmentNumber  } = require('../controllers/userController');
-const { uploadDocuments } = require('../middlewares/upload'); 
+const { submitInquiry, getInquiriesByEnrollmentNumber, updateUserProfile } = require('../controllers/userController');
+const { uploadDocuments } = require('../middlewares/upload');
 const router = express.Router();
 
 /**
@@ -75,5 +75,7 @@ router.post('/submit-inquiry', uploadDocuments.array('documents'), submitInquiry
  *         description: Internal server error.
  */
 router.get('/inquiries/:enrollmentNumber', getInquiriesByEnrollmentNumber);
+
+router.post('/update-profile', updateUserProfile);
 
 module.exports = router;

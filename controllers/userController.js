@@ -54,22 +54,18 @@ async function submitInquiry(req, res) {
 
         const emailContent = `
          <p><strong>Dear ${firstName} ${lastName},</strong></p>
-        <p>Thank you for submitting your <strong> ${
-          INQUIRYCATEGORIES[inquiryCategory - 1]
-        }</strong> on <strong> ${
-          newInquiry.createdAt
-        }.</strong> We have received your ticket and it is now
-        under review with the following Ticket Number: <strong> ${
-          newInquiry.inquiryNumber
-        }.</strong>
+        <p>Thank you for submitting your <strong> ${INQUIRYCATEGORIES[inquiryCategory - 1]
+          }</strong> on <strong> ${newInquiry.createdAt
+          }.</strong> We have received your ticket and it is now
+        under review with the following Ticket Number: <strong> ${newInquiry.inquiryNumber
+          }.</strong>
         <p>We will get back to you shortly with further updates.
         Wishing you a great day, and we will follow up with more information soon.</p>
         <br />
         <br />
         <p>Best regards,</p>
-        <p>${process.env.SUPER_ADMIN_FIRSTNAME} ${
-          process.env.SUPER_ADMIN_LASTNAME
-        } </p>
+        <p>${process.env.SUPER_ADMIN_FIRSTNAME} ${process.env.SUPER_ADMIN_LASTNAME
+          } </p>
         <p>Professor</p>
         <p>Vice Rector</p>
         <p><${process.env.SUPER_ADMIN_EMAIL}</p>
@@ -115,5 +111,54 @@ const getInquiriesByEnrollmentNumber = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+const User = require('../models/User'); // Assuming the model is in models/User.js
 
-module.exports = { submitInquiry, getInquiriesByEnrollmentNumber };
+// Update user profile by email
+const updateUserProfile = async (req, res) => {
+  try {
+    // Extract data from request body
+    const { email, firstName, lastName, password } = req.body;
+
+    // Validate the required fields
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required.' });
+    }
+    if (!firstName && !lastName && !password) {
+      return res.status(400).json({ message: 'At least one field to update (firstName, lastName, password) is required.' });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email });
+
+    // Check if user exists
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    // Update fields if provided
+    if (firstName) user.firstName = firstName;
+    if (lastName) user.lastName = lastName;
+    if (password) user.password = password;  // Ideally hash the password before saving
+
+    // Save the updated user data
+    await user.save();
+
+    // Return the updated user profile as a response
+    return res.status(200).json({
+      message: 'User profile updated successfully.',
+      user: {
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+module.exports = updateUserProfile;
+
+
+module.exports = { submitInquiry, getInquiriesByEnrollmentNumber, updateUserProfile };
