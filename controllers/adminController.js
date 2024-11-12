@@ -2,10 +2,7 @@ const { validationResult } = require("express-validator");
 const User = require("../models/User");
 const Inquiry = require("../models/Inquiry");
 const { sendEmail } = require("../services/mailjetService");
-const {
-  convertHtmlToPdf,
-  convertHtmlToTransferTarguPdf
-} = require("../services/wordConvertService");
+const { convertHtmlToPdf } = require("../services/wordConvertService");
 
 require("dotenv").config();
 const positionNames = process.env.POSITION_NAMES.split(",");
@@ -283,20 +280,17 @@ const checkInquiry = async (req, res) => {
 
     const emailContent = `
     <h>Dear <strong>${inquiry.firstName} ${inquiry.lastName}</strong></h>
-    <p>Your ticket <strong>${inquiry.inquiryNumber}<strong> on <strong> ${
-      INQUIRYCATEGORIES[inquiry.inquiryCategory - 1]
-    }</strong> submitted at <strong>${
-      inquiry.createdAt
-    }</strong> is under checking now.</p>
+    <p>Your ticket <strong>${inquiry.inquiryNumber}<strong> on <strong> ${INQUIRYCATEGORIES[inquiry.inquiryCategory - 1]
+      }</strong> submitted at <strong>${inquiry.createdAt
+      }</strong> is under checking now.</p>
     <p>We will get back to you shortly with further updates.
     Wishing you a great day, and we will follow up with more information soon.</p>
     <br />
     <p>Best regards,</p>
     <p>${authedUser.firstName} ${authedUser.lastName}</p>
     <p>${authedUser.title ? authedUser.title : "Professor"}</p>
-    <p>${
-      authedUser.position ? positionNames[authedUser.position] : "Vice Rector"
-    }</p>
+    <p>${authedUser.position ? positionNames[authedUser.position] : "Vice Rector"
+      }</p>
     <p>${authedUser.email}</p>
     `;
 
@@ -436,70 +430,6 @@ const acceptEnrollmentInquiry = async (req, res) => {
   }
 };
 
-const acceptTransferTarguMuresInquiry = async (req, res) => {
-  const {
-    replaceSubject,
-    replacedEmailTemplate,
-    formData,
-    id,
-    selectedTicket
-  } = req.body;
-
-  try {
-    let result;
-    const inquiry = await Inquiry.findById(id);
-    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
-
-    const authedUser = await User.findById(req.user.id).select(
-      "email firstName lastName title position category"
-    );
-
-    (async () => {
-      try {
-        let documents;
-        result = await convertHtmlToTransferTarguPdf(formData, selectedTicket);
-        documents = selectedTicket.documents;
-
-        documents.push({
-          url: result, // result contains the PDF URL returned from convertHtmlToPdf
-          filename: `_Request_Transfer to Targu Mures (1).pdf` // Example filename for the generated PDF
-        });
-
-        inquiry.status = 2;
-        inquiry.isClicked = 0;
-        inquiry.documents = documents;
-        const updatedHtmlContent = replacedEmailTemplate.replace(
-          /<a [^>]*>(.*?)<\/a>/g,
-          "<a>$1</a>"
-        );
-        inquiry.emailContent = updatedHtmlContent;
-
-        await inquiry.save();
-
-        await sendEmail(
-          inquiry.email,
-          inquiry.firstName + inquiry.lastName,
-          `Your Enrollment Certificate -  Ticket Number ${inquiry.inquiryNumber}!`,
-          `Dear ${inquiry.firstName} ${inquiry.lastName}`,
-          replacedEmailTemplate,
-          result
-        );
-
-        const updatedInquiry = await Inquiry.findById(id);
-
-        res.json({
-          message: "Inquiry accepted and sent confirmation message",
-          inquiry: updatedInquiry
-        });
-      } catch (error) {
-        console.error("Error:", error);
-      }
-    })();
-  } catch (error) {
-    res.status(500).json({ message: "Error accepting inquiry", error });
-  }
-};
-
 const acceptExamInspection = async (req, res) => {
   console.log(req.body, "====accept enrollment inquiry");
   const {
@@ -569,15 +499,11 @@ const processTranscriptRecord = async (req, res) => {
   console.log(req.params);
   try {
     const inquiry = await Inquiry.findById(id);
-
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
-
     inquiry.status = 4;
     inquiry.isClicked = 0;
     await inquiry.save();
-
     const updatedInquiry = await Inquiry.findById(id);
-
     res.json({
       message: "Inquiry was updated to Process Status",
       inquiry: updatedInquiry
@@ -765,6 +691,61 @@ const sendPassEmail = async (req, res) => {
   }
 };
 
+// Delete a user
+const deleteUser = async (req, res) => {
+  const { id } = req.params; // Get user ID from the request parameters
+
+  try {
+    // Find the user by email
+    const user = await User.findOne({ email: id });
+
+    // Check if the user exists
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Prevent deletion of Super Admin
+    if (user.role === 0 && user.email === process.env.SUPER_ADMIN_EMAIL) {
+      return res.status(200).json({ message: "SuperAdmin" });
+    }
+
+    // Delete the user
+    await User.deleteOne({ email: id });
+
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Reset selected user's password to "123456"
+const resetPasswordToDefault = async (req, res) => {
+  const { id } = req.params; // User ID from request parameters
+
+  try {
+    // Find the user by ID
+    const user = await User.findOne({ email: id });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Default password to reset to
+    const defaultPassword = "123456";
+
+    user.password = defaultPassword;
+    await user.save();
+
+    res.status(200).json({ message: "Password reset to default successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
 module.exports = {
   createRole,
   getUsers,
@@ -776,10 +757,11 @@ module.exports = {
   getInquiriesByEnrollmentNumber,
   reOpenTicket,
   acceptEnrollmentInquiry,
-  acceptTransferTarguMuresInquiry,
   acceptExamInspection,
   processTranscriptRecord,
   doneTranscriptRecord,
   NotifyTranscriptRecord,
-  sendPassEmail
+  sendPassEmail,
+  deleteUser,
+  resetPasswordToDefault
 };

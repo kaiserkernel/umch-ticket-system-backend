@@ -15,7 +15,8 @@ const {
   doneTranscriptRecord,
   NotifyTranscriptRecord,
   sendPassEmail,
-  acceptTransferTarguMuresInquiry
+  deleteUser,
+  resetPasswordToDefault
 } = require("../controllers/adminController");
 const checkSuperAdmin = require("../middlewares/checkSuperAdmin");
 const authMiddleware = require("../middlewares/authMiddleware");
@@ -276,12 +277,10 @@ router.post(
   acceptEnrollmentInquiry
 );
 
-router.post(
-  "/inquiries/transferTarguMures/accept",
-  authMiddleware,
-  acceptTransferTarguMuresInquiry
-);
-
 router.post("/send-pass-email", authMiddleware, sendPassEmail);
+
+router.delete("/delete-user/:id", authMiddleware, deleteUser);
+
+router.get("/reset-password/:id", authMiddleware, resetPasswordToDefault);
 
 module.exports = router;
