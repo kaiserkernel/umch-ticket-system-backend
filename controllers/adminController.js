@@ -2,7 +2,10 @@ const { validationResult } = require("express-validator");
 const User = require("../models/User");
 const Inquiry = require("../models/Inquiry");
 const { sendEmail } = require("../services/mailjetService");
-const { convertHtmlToPdf } = require("../services/wordConvertService");
+const {
+  convertHtmlToPdf,
+  convertHtmlToTransferTarguPdf
+} = require("../services/wordConvertService");
 
 require("dotenv").config();
 const positionNames = process.env.POSITION_NAMES.split(",");
@@ -433,6 +436,70 @@ const acceptEnrollmentInquiry = async (req, res) => {
   }
 };
 
+const acceptTransferTarguMuresInquiry = async (req, res) => {
+  const {
+    replaceSubject,
+    replacedEmailTemplate,
+    formData,
+    id,
+    selectedTicket
+  } = req.body;
+
+  try {
+    let result;
+    const inquiry = await Inquiry.findById(id);
+    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
+
+    const authedUser = await User.findById(req.user.id).select(
+      "email firstName lastName title position category"
+    );
+
+    (async () => {
+      try {
+        let documents;
+        result = await convertHtmlToTransferTarguPdf(formData, selectedTicket);
+        documents = selectedTicket.documents;
+
+        documents.push({
+          url: result, // result contains the PDF URL returned from convertHtmlToPdf
+          filename: `_Request_Transfer to Targu Mures (1).pdf` // Example filename for the generated PDF
+        });
+
+        inquiry.status = 2;
+        inquiry.isClicked = 0;
+        inquiry.documents = documents;
+        const updatedHtmlContent = replacedEmailTemplate.replace(
+          /<a [^>]*>(.*?)<\/a>/g,
+          "<a>$1</a>"
+        );
+        inquiry.emailContent = updatedHtmlContent;
+
+        await inquiry.save();
+
+        await sendEmail(
+          inquiry.email,
+          inquiry.firstName + inquiry.lastName,
+          `Your Enrollment Certificate -  Ticket Number ${inquiry.inquiryNumber}!`,
+          `Dear ${inquiry.firstName} ${inquiry.lastName}`,
+          replacedEmailTemplate,
+          result
+        );
+
+        const updatedInquiry = await Inquiry.findById(id);
+
+        res.json({
+          message: "Inquiry accepted and sent confirmation message",
+          inquiry: updatedInquiry
+        });
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    })();
+  } catch (error) {
+    res.status(500).json({ message: "Error accepting inquiry", error });
+  }
+};
+
 const acceptExamInspection = async (req, res) => {
   console.log(req.body, "====accept enrollment inquiry");
   const {
@@ -502,11 +569,15 @@ const processTranscriptRecord = async (req, res) => {
   console.log(req.params);
   try {
     const inquiry = await Inquiry.findById(id);
+
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
+
     inquiry.status = 4;
     inquiry.isClicked = 0;
     await inquiry.save();
+
     const updatedInquiry = await Inquiry.findById(id);
+
     res.json({
       message: "Inquiry was updated to Process Status",
       inquiry: updatedInquiry
@@ -705,6 +776,7 @@ module.exports = {
   getInquiriesByEnrollmentNumber,
   reOpenTicket,
   acceptEnrollmentInquiry,
+  acceptTransferTarguMuresInquiry,
   acceptExamInspection,
   processTranscriptRecord,
   doneTranscriptRecord,
