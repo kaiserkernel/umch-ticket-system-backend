@@ -1,6 +1,11 @@
-const express = require('express');
-const { submitInquiry, getInquiriesByEnrollmentNumber, updateUserProfile } = require('../controllers/userController');
-const { uploadDocuments } = require('../middlewares/upload');
+const express = require("express");
+const {
+  submitInquiry,
+  getInquiriesByEnrollmentNumber,
+  updateUserProfile
+} = require("../controllers/userController");
+const { uploadDocuments } = require("../middlewares/upload");
+const { uploadAvatar } = require("../middlewares/upload");
 const router = express.Router();
 
 /**
@@ -28,7 +33,7 @@ const router = express.Router();
  *                 type: number
  *               firstYearOfStudy:
  *                 type: integer
- *              
+ *
  *               inquiryCategory:
  *                 type: string
  *               subCategory1:
@@ -39,7 +44,7 @@ const router = express.Router();
  *                 type: object
  *               agreement:
  *                 type: boolean
- *               documents:  
+ *               documents:
  *                 type: array
  *                 items:
  *                   type: string
@@ -50,7 +55,11 @@ const router = express.Router();
  *       400:
  *         description: Bad request
  */
-router.post('/submit-inquiry', uploadDocuments.array('documents'), submitInquiry);
+router.post(
+  "/submit-inquiry",
+  uploadDocuments.array("documents"),
+  submitInquiry
+);
 
 /**
  * @swagger
@@ -74,8 +83,12 @@ router.post('/submit-inquiry', uploadDocuments.array('documents'), submitInquiry
  *       500:
  *         description: Internal server error.
  */
-router.get('/inquiries/:enrollmentNumber', getInquiriesByEnrollmentNumber);
+router.get("/inquiries/:enrollmentNumber", getInquiriesByEnrollmentNumber);
 
-router.post('/update-profile', updateUserProfile);
+router.post(
+  "/update-profile",
+  uploadAvatar.single("avatar"),
+  updateUserProfile
+);
 
 module.exports = router;
