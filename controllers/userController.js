@@ -122,18 +122,6 @@ const updateUserProfile = async (req, res) => {
   try {
     // Extract data from request body
     const { email, firstName, lastName, password } = req.body;
-    console.log(req.body);
-
-    // Validate the required fields
-    if (!email) {
-      return res.status(400).json({ message: "Email is required." });
-    }
-    if (!firstName && !lastName && !password) {
-      return res.status(400).json({
-        message:
-          "At least one field to update (firstName, lastName, password) is required."
-      });
-    }
 
     // Find user by email
     const user = await User.findOne({ email });
