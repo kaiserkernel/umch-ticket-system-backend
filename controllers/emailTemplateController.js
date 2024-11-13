@@ -1,0 +1,116 @@
+const EmailTemplate = require("../models/EmailTemplate");
+
+require("dotenv").config();
+
+const addEmailTemplate = async (req, res) => {
+  try {
+    const { emailTemplateTitle, emailTemplateContent } = req.body;
+
+    existingTemplate = await EmailTemplate.findOne({
+      emailTemplateTitle: emailTemplateTitle
+    });
+    if (existingTemplate) {
+      return res.status(400).json({ message: "Template Title already exists" });
+    }
+
+    const newEmailTemplate = new EmailTemplate({
+      emailTemplateTitle,
+      emailTemplateContent
+    });
+
+    await newEmailTemplate.save();
+
+    return res.status(201).json({
+      message: "Email Template was created successfully",
+      emailTemplate: newEmailTemplate
+    });
+  } catch (error) {
+    console.error("Error creating email template:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getEmailTemplate = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const existingTemplate = await EmailTemplate.findById(id);
+    if (!existingTemplate) {
+      return res.status(400).json({ message: "Template Title no exists" });
+    }
+
+    return res.status(201).json({
+      message: "Email Template exists",
+      emailTemplate: existingTemplate
+    });
+  } catch (error) {
+    console.error("Error getting email template:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getAllEmailTemplate = async (req, res) => {
+  try {
+    const allTemplates = await EmailTemplate.find();
+
+    return res.status(201).json({
+      message: "Email Template exists",
+      emailTemplate: allTemplates
+    });
+  } catch (error) {
+    console.error("Error getting email template:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const editEmailTemplate = async (req, res) => {
+  try {
+    const { id, emailTemplateTitle, emailTemplateContent } = req.body;
+    console.log(req.body);
+
+    const emailTemplate = await EmailTemplate.findById(id);
+    emailTemplate.emailTemplateTitle = emailTemplateTitle;
+    emailTemplate.emailTemplateContent = emailTemplateContent;
+
+    emailTemplate.save();
+
+    const allTemplates = await EmailTemplate.find();
+
+    return res.status(201).json({
+      message: "Email Template was updated",
+      emailTemplates: allTemplates
+    });
+  } catch (error) {
+    console.error("Error updating email template:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const deleteEmailTemplate = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const emailTemplate = await EmailTemplate.findById(id);
+    if (!emailTemplate) {
+      return res.status(400).json({ message: "Template no exists" });
+    }
+
+    await EmailTemplate.findOneAndDelete({ _id: id });
+
+    return res.status(201).json({
+      message: "Email Template was deleted",
+      emailTemplate: emailTemplate
+    });
+  } catch (error) {
+    console.error("Error deleting email template:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports = {
+  addEmailTemplate,
+  getEmailTemplate,
+  getAllEmailTemplate,
+  editEmailTemplate,
+  deleteEmailTemplate
+};
