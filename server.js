@@ -7,6 +7,7 @@ const authRoutes = require("./routes/auth");
 const formRoutes = require("./routes/form");
 const adminRoutes = require("./routes/admin");
 const userRoutes = require("./routes/user");
+const emailTemplateRoutes = require("./routes/emailTemplate");
 const path = require("path");
 const setupSwagger = require("./swagger/swagger");
 const socketIo = require("socket.io");
@@ -20,7 +21,7 @@ const corsOptions = {
   origin: "*", // Specify origin if needed (e.g., 'http://localhost:3000')
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "Accept"],
-  credentials: true, // Use true if sending cookies or auth headers is necessary
+  credentials: true // Use true if sending cookies or auth headers is necessary
 };
 // socket
 const server = http.createServer(app);
@@ -34,7 +35,7 @@ const serviceAccount = require(path.join(
 ));
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: admin.credential.cert(serviceAccount)
 });
 
 app.use(cors(corsOptions));
@@ -48,6 +49,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/form", formRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/emailTemplate", emailTemplateRoutes);
 
 setupSwagger(app);
 
@@ -100,8 +102,8 @@ async function sendPushNotification(userId, message) {
     const payload = {
       notification: {
         title: "New Message",
-        body: message,
-      },
+        body: message
+      }
     };
 
     try {
