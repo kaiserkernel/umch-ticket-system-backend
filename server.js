@@ -45,6 +45,7 @@ admin.initializeApp({
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions)); // Handle preflight requests
 app.use(express.static(path.resolve("./public")));
+app.use(express.static(path.resolve("./build")));
 app.use(express.json());
 
 app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
@@ -56,7 +57,7 @@ app.use("/api/emailTemplate", emailTemplateRoutes);
 
 setupSwagger(app);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 443;
 
 // Store connected clients
 let connectedUsers = {};
@@ -126,6 +127,10 @@ async function getUserToken(userId) {
   // Implement your logic to retrieve the FCM token for the user from your database
   return "user-fcm-token";
 }
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "build", "index.html"));
+});
 
 // Start HTTPS server
 server.listen(PORT, () => {
