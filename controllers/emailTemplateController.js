@@ -4,7 +4,12 @@ require("dotenv").config();
 
 const addEmailTemplate = async (req, res) => {
   try {
-    const { emailTemplateTitle, emailTemplateContent } = req.body;
+    const {
+      inquiryCategory,
+      subCategory,
+      emailTemplateTitle,
+      emailTemplateContent
+    } = req.body;
 
     existingTemplate = await EmailTemplate.findOne({
       emailTemplateTitle: emailTemplateTitle
@@ -14,6 +19,8 @@ const addEmailTemplate = async (req, res) => {
     }
 
     const newEmailTemplate = new EmailTemplate({
+      inquiryCategory,
+      subCategory,
       emailTemplateTitle,
       emailTemplateContent
     });
@@ -42,6 +49,29 @@ const getEmailTemplate = async (req, res) => {
     return res.status(201).json({
       message: "Email Template exists",
       emailTemplate: existingTemplate
+    });
+  } catch (error) {
+    console.error("Error getting email template:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getEmailTemplatesByCategory = async (req, res) => {
+  try {
+    const { inquiryCategory, subCategory } = req.body;
+    console.log(req.body);
+
+    const existingTemplates = await EmailTemplate.find({
+      inquiryCategory: inquiryCategory,
+      subCategory: subCategory
+    });
+    if (!existingTemplates) {
+      return res.status(400).json({ message: "Template Title no exists" });
+    }
+
+    return res.status(201).json({
+      message: "Email Template exists",
+      emailTemplates: existingTemplates
     });
   } catch (error) {
     console.error("Error getting email template:", error);
@@ -110,6 +140,7 @@ const deleteEmailTemplate = async (req, res) => {
 module.exports = {
   addEmailTemplate,
   getEmailTemplate,
+  getEmailTemplatesByCategory,
   getAllEmailTemplate,
   editEmailTemplate,
   deleteEmailTemplate
