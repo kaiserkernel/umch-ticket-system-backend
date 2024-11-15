@@ -121,7 +121,14 @@ const getInquiriesByEnrollmentNumber = async (req, res) => {
 const updateUserProfile = async (req, res) => {
   try {
     // Extract data from request body
-    const { email, firstName, lastName, password } = req.body;
+    const {
+      email,
+      firstName,
+      lastName,
+      enrollmentNumber,
+      firstYearOfStudy,
+      password
+    } = req.body;
 
     // Find user by email
     const user = await User.findOne({ email });
@@ -135,6 +142,7 @@ const updateUserProfile = async (req, res) => {
     if (firstName) user.firstName = firstName;
     if (lastName) user.lastName = lastName;
     if (password) user.password = password; // Ideally hash the password before saving
+    if (firstYearOfStudy) user.firstYearOfStudy = firstYearOfStudy;
     if (req?.file?.filename) {
       user.avatar = `/uploads/images/avatar/${req.file.filename}`;
     }
@@ -149,6 +157,8 @@ const updateUserProfile = async (req, res) => {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        enrollmentNumber: user.enrollmentNumber,
+        firstYearOfStudy: user.firstYearOfStudy,
         avatar: user.avatar,
         role: user.role,
         position: user.position
