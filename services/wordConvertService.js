@@ -10,6 +10,13 @@ async function convertHtmlToPdf(formData, selectedTicket) {
   const outputPath = "public/uploads/documents/";
   const fileName = Date.now() + ".pdf";
 
+  // Resolve the absolute path to bg.png
+  const bgImagePath = path.join(__dirname, "../public/docTemplate/bg.png");
+
+  // Read the image as base64
+  const bgImageBase64 = fs.readFileSync(bgImagePath, { encoding: "base64" });
+  
+
   const htmlContent = `
   <html>
     <head>
@@ -18,7 +25,7 @@ async function convertHtmlToPdf(formData, selectedTicket) {
           font-family: Arial, sans-serif;
           margin: 0;
           padding: 0;
-          background-image: url('${process.env.HOST}/docTemplate/bg.png');
+          background-image: url("data:image/png;base64,${bgImageBase64}");
           background-size: contain;
           background-repeat: no-repeat;
           background-position: center;
@@ -75,19 +82,32 @@ async function convertHtmlToPdf(formData, selectedTicket) {
     console.log(err);
   }
 
-  return new Promise((resolve, reject) => {
-    pdf
-      .create(content, { format: "A4" })
-      .toFile(outputPath + fileName, (err, res) => {
-        if (err) {
-          console.error("Error creating PDF:", err);
-          reject(err);
-        } else {
-          console.log(`PDF created at ${outputPath + fileName}`);
-          resolve("/uploads/documents/" + fileName);
-        }
-      });
+  // return new Promise((resolve, reject) => {
+  //   pdf
+  //     .create(content, { format: "A4" })
+  //     .toFile(outputPath + fileName, (err, res) => {
+  //       if (err) {
+  //         console.error("Error creating PDF:", err);
+  //         reject(err);
+  //       } else {
+  //         console.log(`PDF created at ${outputPath + fileName}`);
+  //         resolve("/uploads/documents/" + fileName);
+  //       }
+  //     });
+  // });
+
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+
+  await page.setContent(content, { waitUntil: "load" });
+  await page.pdf({
+    path: `${outputPath}/${fileName}`,
+    format: "A4",
+    printBackground: true
   });
+
+  await browser.close();
+  return "/uploads/documents/" + fileName;
 }
 
 async function convertHtmlToTransferTarguPdf(formData, selectedTicket) {
