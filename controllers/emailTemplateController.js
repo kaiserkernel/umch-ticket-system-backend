@@ -7,12 +7,15 @@ const addEmailTemplate = async (req, res) => {
     const {
       inquiryCategory,
       subCategory,
+      label,
       emailTemplateTitle,
       emailTemplateContent
     } = req.body;
 
     existingTemplate = await EmailTemplate.findOne({
-      emailTemplateTitle: emailTemplateTitle
+      emailTemplateTitle: emailTemplateTitle,
+      inquiryCategory: inquiryCategory,
+      subCategory: subCategory
     });
     if (existingTemplate) {
       return res.status(400).json({ message: "Template Title already exists" });
@@ -21,6 +24,7 @@ const addEmailTemplate = async (req, res) => {
     const newEmailTemplate = new EmailTemplate({
       inquiryCategory,
       subCategory,
+      label,
       emailTemplateTitle,
       emailTemplateContent
     });

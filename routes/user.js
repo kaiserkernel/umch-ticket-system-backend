@@ -2,7 +2,9 @@ const express = require("express");
 const {
   submitInquiry,
   getInquiriesByEnrollmentNumber,
-  updateUserProfile
+  updateUserProfile,
+  resetPassword,
+  adminResetPassword
 } = require("../controllers/userController");
 const { uploadDocuments } = require("../middlewares/upload");
 const { uploadAvatar } = require("../middlewares/upload");
@@ -90,5 +92,7 @@ router.post(
   uploadAvatar.single("avatar"),
   updateUserProfile
 );
+router.post("/reset-password", resetPassword);
+router.post("/admin-reset-password", adminResetPassword);
 
 module.exports = router;
