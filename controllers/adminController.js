@@ -121,6 +121,92 @@ const createRole = async (req, res) => {
   }
 };
 
+const editRole = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const {
+    firstName,
+    lastName,
+    email,
+    password,
+    role,
+    position,
+    title,
+    category
+  } = req.body;
+
+  try {
+    const existingUser = await User.findOne({ email });
+    if (!existingUser) {
+      return res.status(400).json({ message: "User no exists" });
+    }
+
+    existingUser.firstName = firstName;
+    existingUser.lastName = lastName;
+    existingUser.email = email;
+    existingUser.role = role;
+    existingUser.password = password;
+    existingUser.position = position;
+    existingUser.title = title;
+    existingUser.category = category;
+    await existingUser.save();
+
+    const accessToString = category
+      .map((item) => {
+        const categoryInfo = item.subCategory1
+          ? `${subCategoryNames[item.subCategory1 - 1]}`
+          : `${inquriyCategoryNames[item.inquiryCategory - 1]}`;
+        return `<li>${categoryInfo} ( ${item.permission} )</li>`;
+      })
+      .join("");
+
+    const emailContent = `
+      <h3>Dear ${firstName} ${lastName}</h3>
+      <p>You are now part of the UMCH Ticket System Team, and we are pleased to welcome you onboard.
+      The UMCH Ticket System serves as a digital request and complaint portal for students.
+      We appreciate your willingness to take responsibility for the assigned requests or complaints 
+      and to provide timely assistance to our students in resolving their concerns.</p>
+      <p>We have granted you access to the following inquiries with the Role ${positionNames[position]}.</p>
+      <p>Here are inquiry details you can access:</p>
+      <ul>${accessToString}</ul> 
+      <p>Here are your account details:</p>
+      <ul>
+          <li><strong>Email:</strong> ${email}</li>
+          <li><strong>Password:</strong> ${password}</li>
+          <li><strong>Title:</strong>${title}</li>
+          <li><strong>First Name:</strong>${firstName}</li>
+          <li><strong>Last Name:</strong>${lastName}</li>
+          <li><strong>Department:</strong>${positionNames[position]}</li>
+      </ul>
+      <p>If you have any technical questions, please don’t hesitate to reach out to us at marketing@edu.umch.de.
+      You can log in using these credentials <a href="https://umch-ticket-system.vercel.app/admin">LINK</a>.Thank you for your support, and we look forward to a successful collaboration!.</p>
+      <p>Best regards,</p>
+      <p>Your UMCH Team</p>
+    `;
+
+    // Send the confirmation email
+    await sendEmail(
+      email,
+      firstName + lastName,
+      "Welcome to the UMCH Ticket System Team!",
+      "Welcome ! Now you are in a admin role in UMCH ticket system!",
+      emailContent
+    );
+
+    res
+      .status(201)
+      .json({
+        message: "Role was updated successfully, confirmation email sent."
+      });
+  } catch (error) {
+    console.error("Error creating user:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // Get all received inquiries
 const getReceivedInquiries = async (req, res) => {
   try {
@@ -816,6 +902,7 @@ const resetPasswordToDefault = async (req, res) => {
 
 module.exports = {
   createRole,
+  editRole,
   getUsers,
   getReceivedInquiries,
   getInquiryByID,

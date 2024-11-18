@@ -11,14 +11,14 @@ const UserSchema = new mongoose.Schema({
     },
     unique: function () {
       return this.role !== 2;
-    },
+    }
   },
   role: { type: Number, enum: [0, 2], required: true },
   position: {
     type: Number,
-    enum: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+    enum: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
     default: 4,
-    required: true,
+    required: true
   },
   title: { type: String },
   enrollmentNumber: {
@@ -28,31 +28,40 @@ const UserSchema = new mongoose.Schema({
     },
     required: function () {
       return this.role === 2;
-    },
+    }
   },
   firstYearOfStudy: {
     type: Number,
     required: function () {
       return this.role === 2;
-    },
+    }
   },
   category: [
     {
       inquiryCategory: {
-        type: String,
+        type: String
       },
       subCategory1: {
-        type: String,
+        type: String
+      },
+      value: {
+        type: String
+      },
+      label: {
+        type: String
       },
       permission: {
         type: String,
-        enum: ["None", "Passive", "Active", "Responsible"],
+        enum: ["None", "Passive", "Active", "Responsible"]
       },
-    },
+      permissionValue: {
+        type: String
+      }
+    }
   ],
   avatar: { type: String },
-  password: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
+  password: { type: String },
+  createdAt: { type: Date, default: Date.now }
 });
 
 UserSchema.pre("save", function (next) {

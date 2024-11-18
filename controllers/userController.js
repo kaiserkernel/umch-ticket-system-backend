@@ -170,8 +170,130 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
+const resetPassword = async (req, res) => {
+  try {
+    // Extract data from request body
+    const { enrollmentNumber } = req.body;
+
+    // Find user by email
+    const user = await User.findOne({ enrollmentNumber });
+
+    // Check if user exists
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const randomPassword = Math.floor(100000 + Math.random() * 900000);
+
+    user.password = randomPassword;
+    await user.save();
+
+    const emailContent = `
+    <p><strong>Dear ${user?.firstName} ${user?.lastName},</strong></p>
+   <p>Thank you for submitting your Password Reset.</p>
+   <p> Your new password is ${randomPassword} .</p>
+   <br />
+   <br />
+   <p>Best regards,</p>
+   <p>${process.env.SUPER_ADMIN_FIRSTNAME} ${process.env.SUPER_ADMIN_LASTNAME} </p>
+   <p>Professor</p>
+   <p>Vice Rector</p>
+   <p><${process.env.SUPER_ADMIN_EMAIL}</p>
+   `;
+
+    // Send the confirmation email
+    await sendEmail(
+      user?.email,
+      user?.firstName + " " + user?.lastName,
+      "Your Password has been reset!",
+      `Dear ${user?.firstName} ${user?.lastName}`,
+      emailContent
+    );
+
+    // Return the updated user profile as a response
+    return res.status(200).json({
+      message: "Your Password was updated successfully.",
+      user: {
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        enrollmentNumber: user.enrollmentNumber,
+        firstYearOfStudy: user.firstYearOfStudy,
+        avatar: user.avatar,
+        role: user.role,
+        position: user.position
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+const adminResetPassword = async (req, res) => {
+  try {
+    // Extract data from request body
+    const { email } = req.body;
+
+    // Find user by email
+    const user = await User.findOne({ email });
+
+    // Check if user exists
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const randomPassword = Math.floor(100000 + Math.random() * 900000);
+
+    user.password = randomPassword;
+    await user.save();
+
+    const emailContent = `
+    <p><strong>Dear ${user?.firstName} ${user?.lastName},</strong></p>
+   <p>Thank you for submitting your Password Reset.</p>
+   <p> Your new password is ${randomPassword} .</p>
+   <br />
+   <br />
+   <p>Best regards,</p>
+   <p>${process.env.SUPER_ADMIN_FIRSTNAME} ${process.env.SUPER_ADMIN_LASTNAME} </p>
+   <p>Professor</p>
+   <p>Vice Rector</p>
+   <p><${process.env.SUPER_ADMIN_EMAIL}</p>
+   `;
+
+    // Send the confirmation email
+    await sendEmail(
+      user?.email,
+      user?.firstName + " " + user?.lastName,
+      "Your Password has been reset!",
+      `Dear ${user?.firstName} ${user?.lastName}`,
+      emailContent
+    );
+
+    // Return the updated user profile as a response
+    return res.status(200).json({
+      message: "Your Password was updated successfully.",
+      user: {
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        enrollmentNumber: user.enrollmentNumber,
+        firstYearOfStudy: user.firstYearOfStudy,
+        avatar: user.avatar,
+        role: user.role,
+        position: user.position
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   submitInquiry,
   getInquiriesByEnrollmentNumber,
-  updateUserProfile
+  updateUserProfile,
+  resetPassword,
+  adminResetPassword
 };

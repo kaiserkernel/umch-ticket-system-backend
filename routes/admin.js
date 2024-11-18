@@ -17,7 +17,8 @@ const {
   sendPassEmail,
   deleteUser,
   resetPasswordToDefault,
-  acceptTransferTarguMuresInquiry
+  acceptTransferTarguMuresInquiry,
+  editRole
 } = require("../controllers/adminController");
 const checkSuperAdmin = require("../middlewares/checkSuperAdmin");
 const authMiddleware = require("../middlewares/authMiddleware");
@@ -283,6 +284,7 @@ router.post("/send-pass-email", authMiddleware, sendPassEmail);
 router.delete("/delete-user/:id", authMiddleware, deleteUser);
 
 router.get("/reset-password/:id", authMiddleware, resetPasswordToDefault);
+router.post("/edit-role", authMiddleware, editRole);
 
 router.post(
   "/inquiries/transferTarguMures/accept",

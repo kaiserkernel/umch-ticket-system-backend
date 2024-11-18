@@ -21,13 +21,13 @@ exports.register = async (req, res) => {
     password,
     role,
     enrollmentNumber,
-    firstYearOfStudy,
+    firstYearOfStudy
   } = req.body;
 
   if (role === "2" && (!enrollmentNumber || !firstYearOfStudy)) {
     return res.status(400).json({
       message:
-        "Enrollment number and first year of study are required for students.",
+        "Enrollment number and first year of study are required for students."
     });
   }
 
@@ -55,7 +55,7 @@ exports.register = async (req, res) => {
       firstYearOfStudy: role === "2" ? firstYearOfStudy : undefined,
       avatar: req.file
         ? `/uploads/images/avatar/${req.file.filename}`
-        : undefined,
+        : undefined
     });
 
     await newUser.save();
@@ -94,7 +94,7 @@ exports.login = async (req, res) => {
     }
     const payload = { id: user._id, email: user.email, role: user.role };
 
-    const token = await jwt.sign(payload, secret);
+    const token = await jwt.sign(payload, secret, { expiresIn: "1d" });
 
     if (!token) return res.status(500).json({ error: "Error signing token" });
 
@@ -106,13 +106,13 @@ exports.login = async (req, res) => {
       role: user.role,
       position: user.position,
       firstYearOfStudy: user.firstYearOfStudy,
-      avatar: user.avatar,
+      avatar: user.avatar
     };
 
     return res.json({
       success: true,
       token: `Bearer ${token}`,
-      userData: userData,
+      userData: userData
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
