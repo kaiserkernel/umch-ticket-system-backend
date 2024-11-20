@@ -28,7 +28,7 @@ async function sendEmail(
           {
             From: {
               Email: process.env.SUPER_ADMIN_EMAIL,
-              Name: "Admin"
+              Name: "UMCH TICKET SYSTEM"
             },
             To: [
               {

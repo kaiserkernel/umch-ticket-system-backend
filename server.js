@@ -1,6 +1,5 @@
 const express = require("express");
-const fs = require("fs");
-const https = require('https');
+const http = require("http");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
@@ -13,8 +12,8 @@ const path = require("path");
 const setupSwagger = require("./swagger/swagger");
 const socketIo = require("socket.io");
 const admin = require("firebase-admin");
-
 dotenv.config();
+
 connectDB();
 
 const app = express();
@@ -24,12 +23,9 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization", "Accept"],
   credentials: true // Use true if sending cookies or auth headers is necessary
 };
-
-// Load your SSL certificate and key
-const options = {
-  key: fs.readFileSync('./ssl/private.key'), // replace with your actual path
-  cert: fs.readFileSync('./ssl/certificate.crt') // replace with your actual path
-};
+// socket
+const server = http.createServer(app);
+const io = socketIo(server);
 
 // Initialize Firebase Admin
 const serviceAccount = require(path.join(
@@ -45,7 +41,7 @@ admin.initializeApp({
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions)); // Handle preflight requests
 app.use(express.static(path.resolve("./public")));
-app.use(express.static(path.resolve("./build")));
+
 app.use(express.json());
 
 app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
@@ -57,15 +53,12 @@ app.use("/api/emailTemplate", emailTemplateRoutes);
 
 setupSwagger(app);
 
-const PORT = process.env.PORT || 443;
+const PORT = process.env.PORT || 5000;
 
 // Store connected clients
 let connectedUsers = {};
 
-// 1. Socket.IO Setup with HTTPS server
-const server = https.createServer(options, app); // create an HTTPS server
-const io = socketIo(server);
-
+// 1. Socket.IO Setup
 io.on("connection", (socket) => {
   console.log("New client connected:", socket.id);
 
@@ -128,11 +121,6 @@ async function getUserToken(userId) {
   return "user-fcm-token";
 }
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "build", "index.html"));
-});
-
-// Start HTTPS server
-server.listen(PORT, () => {
-  console.log(`HTTPS server running on port ${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
