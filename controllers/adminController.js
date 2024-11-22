@@ -196,11 +196,9 @@ const editRole = async (req, res) => {
       emailContent
     );
 
-    res
-      .status(201)
-      .json({
-        message: "Role was updated successfully, confirmation email sent."
-      });
+    res.status(201).json({
+      message: "Role was updated successfully, confirmation email sent."
+    });
   } catch (error) {
     console.error("Error creating user:", error);
     res.status(500).json({ message: "Server error" });
@@ -420,7 +418,9 @@ const acceptInquiry = async (req, res) => {
     inquiry.isClicked = 0;
     const updatedHtmlContent = replacedEmailTemplate.replace(
       /<a [^>]*>(.*?)<\/a>/g,
-      "<a>$1</a>"
+      (match, innerText) => {
+        return `<a>${innerText.toLowerCase()}</a>`;
+      }
     );
     inquiry.emailContent = updatedHtmlContent;
     console.log(inquiry);
@@ -484,7 +484,9 @@ const acceptEnrollmentInquiry = async (req, res) => {
         inquiry.documents = documents;
         const updatedHtmlContent = replacedEmailTemplate.replace(
           /<a [^>]*>(.*?)<\/a>/g,
-          "<a>$1</a>"
+          (match, innerText) => {
+            return `<a>${innerText.toLowerCase()}</a>`;
+          }
         );
         inquiry.emailContent = updatedHtmlContent;
         console.log(inquiry);
@@ -550,7 +552,9 @@ const acceptExamInspection = async (req, res) => {
 
       const updatedHtmlContent = replacedEmailTemplate.replace(
         /<a [^>]*>(.*?)<\/a>/g,
-        "<a>$1</a>"
+        (match, innerText) => {
+          return `<a>${innerText.toLowerCase()}</a>`;
+        }
       );
       inquiry.emailContent = updatedHtmlContent;
       console.log(inquiry);
@@ -620,7 +624,9 @@ const acceptTransferTarguMuresInquiry = async (req, res) => {
         inquiry.documents = documents;
         const updatedHtmlContent = replacedEmailTemplate.replace(
           /<a [^>]*>(.*?)<\/a>/g,
-          "<a>$1</a>"
+          (match, innerText) => {
+            return `<a>${innerText.toLowerCase()}</a>`;
+          }
         );
         inquiry.emailContent = updatedHtmlContent;
 
@@ -718,7 +724,9 @@ const NotifyTranscriptRecord = async (req, res) => {
     inquiry.isClicked = 0;
     const updatedHtmlContent = replacedEmailTemplate.replace(
       /<a [^>]*>(.*?)<\/a>/g,
-      "<a>$1</a>"
+      (match, innerText) => {
+        return `<a>${innerText.toLowerCase()}</a>`;
+      }
     );
     inquiry.emailContent = updatedHtmlContent;
     console.log(inquiry);
@@ -761,7 +769,9 @@ const rejectInquiry = async (req, res) => {
     inquiry.isClicked = 0;
     const updatedHtmlContent = replacedEmailTemplate.replace(
       /<a [^>]*>(.*?)<\/a>/g,
-      "<a>$1</a>"
+      (match, innerText) => {
+        return `<a>${innerText.toLowerCase()}</a>`;
+      }
     );
     inquiry.emailContent = updatedHtmlContent;
     await inquiry.save();

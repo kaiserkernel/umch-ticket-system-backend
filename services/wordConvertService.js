@@ -11,11 +11,10 @@ async function convertHtmlToPdf(formData, selectedTicket) {
   const fileName = Date.now() + ".pdf";
 
   // Resolve the absolute path to bg.png
-  const bgImagePath = path.join(__dirname, "../public/docTemplate/bg.png");
+  const bgImagePath = path.join(__dirname, "../public/docTemplate/bg.webp");
 
   // Read the image as base64
   const bgImageBase64 = fs.readFileSync(bgImagePath, { encoding: "base64" });
-  
 
   const htmlContent = `
   <html>
@@ -40,6 +39,7 @@ async function convertHtmlToPdf(formData, selectedTicket) {
         p { font-size: 14px; line-height: 1.5; }
         .content-box { margin-top: 110px; max-width: 600px; }
         .content-info { margin-top: 100px; text-align: center; font-weight: bold; }
+        .fw-bold {font-weight:bold;}
         .content { margin-top: 100px; }
         .text-center { text-align: center; }
         .mt-40 { margin-top: 40px; }
@@ -48,13 +48,13 @@ async function convertHtmlToPdf(formData, selectedTicket) {
     <body>
       <div class="content-box">
         <span class="number">Reg. no.:</span>
-        <span class="small">10520 / [studentNo].</span>
+        <span class="small">10520 / [ticketNumber] / [date].</span>
       </div>
       <div>
         <p class="content-info">CERTIFICATE OF ENROLLMENT</p>
-        <p class="content">We certify that Mr./Ms. [fullname], [nationality] citizen is a fulltime student
+        <p class="content">We certify that Mr./Ms. <span class="fw-bold">[fullname] </span>, [nationality] citizen is a fulltime student
           at the George Emil Palade University of Medicine, Pharmacy, Science,
-          and Technology of Târgu Mureş (UMFST), Program of study MEDICINE, English (Hamburg, Germany) in the [studyofyear] of study,
+          and Technology of Târgu Mureş (UMFST), Program of study MEDICINE, English (Hamburg, Germany) in the <span class="fw-bold"> [studyofyear]  of study </span>,
           academic year 2024/2025. The period of studies is six years (12 semesters).
           This academic year (2 semesters) begins on the 23th of September 2024 and lasts until the 22nd
           of September 2025. The course of study is subject to a fee.
@@ -77,7 +77,8 @@ async function convertHtmlToPdf(formData, selectedTicket) {
       )
       .replace("[nationality]", detail["nationality"])
       .replace("[studyofyear]", detail["currentYearOfStudy"])
-      .replace("[studentNo]", detail["studentNo"]);
+      .replace("[ticketNumber]", selectedTicket?.inquiryNumber)
+      .replace("[date]", moment(new Date()).format("DD-MM-YYYY"));
   } catch (err) {
     console.log(err);
   }
@@ -117,7 +118,7 @@ async function convertHtmlToTransferTarguPdf(formData, selectedTicket) {
   const fileName = Date.now() + ".pdf";
 
   // Resolve the absolute path to bg.png
-  const bgImagePath = path.join(__dirname, "../public/docTemplate/bg.png");
+  const bgImagePath = path.join(__dirname, "../public/docTemplate/bg.webp");
 
   // Read the image as base64
   const bgImageBase64 = fs.readFileSync(bgImagePath, { encoding: "base64" });
@@ -229,7 +230,7 @@ async function convertHtmlToTransferTarguPdf(formData, selectedTicket) {
   <body>
     <div class="content-box">
       <span class="number">Reg. no.:</span>
-      <span class="small">10520 / [studentNo].</span>
+      <span class="small">10520 / [ticketNumber] / [date].</span>
     </div>
 
     <div class="content-header">
@@ -303,10 +304,11 @@ async function convertHtmlToTransferTarguPdf(formData, selectedTicket) {
         "[FullName]",
         selectedTicket?.firstName + " " + selectedTicket?.lastName
       )
-      .replace("[studentNo]", detail["studentNo"])
+      .replace("[ticketNumber]", selectedTicket?.inquiryNumber)
+      .replace("[date]", moment(new Date()).format("DD-MM-YYYY"))
       .replace(
         "[Date of Birth]",
-        moment(selectedTicket?.details?.birthday).format("MM/DD/YYYY")
+        moment(selectedTicket?.details?.birthday).format("DD-MM-YYYY")
       )
       .replace(
         "[Year of Study / Academic Year]",
