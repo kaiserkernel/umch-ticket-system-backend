@@ -2,6 +2,10 @@ const Inquiry = require("../models/Inquiry");
 const User = require("../models/User"); // Assuming the model is in models/User.js
 const { sendEmail } = require("../services/mailjetService");
 const { convertHtmlToPdf } = require("../services/wordConvertService");
+const { detectLanguage } = require("../services/detectLanguage");
+const path = require("path");
+const moment = require("moment");
+
 require("dotenv").config();
 
 const INQUIRYCATEGORIES = [
@@ -15,6 +19,8 @@ const INQUIRYCATEGORIES = [
   "Other"
 ];
 async function submitInquiry(req, res) {
+  // const bgImagePath = path.join(__dirname, "../public/docTemplate/bg.webp");
+
   try {
     const {
       firstName,
@@ -28,10 +34,35 @@ async function submitInquiry(req, res) {
       details,
       agreement
     } = req.body;
+
     const documents = req.files.map((file) => ({
       url: `/uploads/documents/${file.filename}`,
       filename: file.originalname
     }));
+
+    let isNonEnglish = false;
+
+    await Promise.all(
+      req.files.map(async (file) => {
+        if (inquiryCategory === "1" && subCategory1 === "1") {
+          const uploadedDocPath = path.join(
+            __dirname,
+            `../public/uploads/documents/${file.filename}`
+          );
+          const result = await detectLanguage(uploadedDocPath);
+          console.log(result, "====result");
+          if (result === true) {
+            isNonEnglish = true; // Set a flag for invalid language
+          }
+        }
+      })
+    );
+
+    if (inquiryCategory === "1" && subCategory1 === "1") {
+      if (!isNonEnglish) {
+        return res.status(401).json({ message: "Please upload English PDFs" });
+      }
+    }
 
     (async () => {
       try {
@@ -50,16 +81,15 @@ async function submitInquiry(req, res) {
           status: 0
         });
 
-        console.log(documents, "====newinquiry documents");
         await newInquiry.save();
 
         const emailContent = `
          <p><strong>Dear ${firstName} ${lastName},</strong></p>
         <p>Thank you for submitting your <strong> ${
           INQUIRYCATEGORIES[inquiryCategory - 1]
-        }</strong> on <strong> ${
-          newInquiry.createdAt
-        }.</strong> We have received your ticket and it is now
+        }</strong> on <strong> ${moment(newInquiry.createdAt).format(
+          "DD-MM-YYY hh:mm:ss A"
+        )}.</strong> We have received your ticket and it is now
         under review with the following Ticket Number: <strong> ${
           newInquiry.inquiryNumber
         }.</strong>
