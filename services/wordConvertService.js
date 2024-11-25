@@ -78,7 +78,7 @@ async function convertHtmlToPdf(formData, selectedTicket) {
       .replace("[nationality]", detail["nationality"])
       .replace("[studyofyear]", detail["currentYearOfStudy"])
       .replace("[ticketNumber]", selectedTicket?.inquiryNumber)
-      .replace("[date]", moment(new Date()).format("DD-MM-YYYY"));
+      .replace("[date]", moment(new Date()).format("DD.MM.YYYY"));
   } catch (err) {
     console.log(err);
   }
@@ -305,7 +305,7 @@ async function convertHtmlToTransferTarguPdf(formData, selectedTicket) {
         selectedTicket?.firstName + " " + selectedTicket?.lastName
       )
       .replace("[ticketNumber]", selectedTicket?.inquiryNumber)
-      .replace("[date]", moment(new Date()).format("DD-MM-YYYY"))
+      .replace("[date]", moment(new Date()).format("DD.MM.YYYY"))
       .replace(
         "[Date of Birth]",
         moment(selectedTicket?.details?.birthday).format("DD-MM-YYYY")

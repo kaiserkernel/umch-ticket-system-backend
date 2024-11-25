@@ -2,6 +2,7 @@ const { validationResult } = require("express-validator");
 const User = require("../models/User");
 const Inquiry = require("../models/Inquiry");
 const { sendEmail } = require("../services/mailjetService");
+
 const {
   convertHtmlToPdf,
   convertHtmlToTransferTarguPdf
