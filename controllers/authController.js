@@ -99,6 +99,7 @@ exports.login = async (req, res) => {
     if (!token) return res.status(500).json({ error: "Error signing token" });
 
     const userData = {
+      id: user._id,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
