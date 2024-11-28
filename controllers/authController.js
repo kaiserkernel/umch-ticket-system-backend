@@ -141,7 +141,7 @@ const verifyRecaptchaToken = async (_recaptchaToken) => {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
-      secret: "YOUR_SECRET_KEY",
+      secret: process.env.SECRET_KEY,
       response: _recaptchaToken,
     }),
   });
