@@ -9,6 +9,14 @@ require("dotenv").config();
 const secret = process.env.JWT_SECRET;
 
 exports.register = async (req, res) => {
+
+  // validation recaptcha
+  const data = await verifyRecaptchaToken(req.recaptChatoken);
+
+  if (!data.success || data.score < 0.5) {
+    return res.status(403).json({ success: false, error: "reCAPTCHA verification failed." });
+  }
+
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
@@ -67,6 +75,13 @@ exports.register = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
+  // validation recaptcha
+  const data = await verifyRecaptchaToken(req.recaptChatoken);
+
+  if (!data.success || data.score < 0.5) {
+    return res.status(403).json({ success: false, error: "reCAPTCHA verification failed." });
+  }
+
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
@@ -120,3 +135,17 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+const verifyRecaptchaToken = async (_recaptchaToken) => {
+  const response = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      secret: "YOUR_SECRET_KEY",
+      response: _recaptchaToken,
+    }),
+  });
+
+  const data = await response.json();
+  return data;
+}
