@@ -75,8 +75,11 @@ exports.register = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
+  const { email, password, enrollmentNumber, recaptChatoken } = req.body;
+
+  console.log(recaptChatoken, 're cap')
   // validation recaptcha
-  const data = await verifyRecaptchaToken(req.recaptChatoken);
+  const data = await verifyRecaptchaToken(recaptChatoken);
 
   if (!data.success || data.score < 0.5) {
     return res.status(403).json({ success: false, error: "reCAPTCHA verification failed." });
@@ -86,8 +89,6 @@ exports.login = async (req, res) => {
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
-
-  const { email, password, enrollmentNumber } = req.body;
 
   try {
     const user = await User.findOne(
