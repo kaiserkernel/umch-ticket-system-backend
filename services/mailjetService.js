@@ -27,7 +27,7 @@ async function sendEmail(
         Messages: [
           {
             From: {
-              Email: process.env.SUPER_ADMIN_EMAIL,
+              Email: "secretary@edu.umch.de",
               Name: "UMCH TICKET SYSTEM"
             },
             To: [
@@ -50,8 +50,8 @@ async function sendEmail(
         Messages: [
           {
             From: {
-              Email: process.env.SUPER_ADMIN_EMAIL,
-              Name: "Admin"
+              Email: "secretary@edu.umch.de",
+              Name: "UMCH TICKET SYSTEM"
             },
             To: [
               {
