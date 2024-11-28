@@ -9,9 +9,19 @@ require("dotenv").config();
 const secret = process.env.JWT_SECRET;
 
 exports.register = async (req, res) => {
+  const {
+    firstName,
+    lastName,
+    email,
+    password,
+    role,
+    enrollmentNumber,
+    firstYearOfStudy,
+    recaptChatoken
+  } = req.body;
 
   // validation recaptcha
-  const data = await verifyRecaptchaToken(req.recaptChatoken);
+  const data = await verifyRecaptchaToken(recaptChatoken);
 
   if (!data.success || data.score < 0.5) {
     return res.status(403).json({ success: false, error: "reCAPTCHA verification failed." });
@@ -22,15 +32,6 @@ exports.register = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const {
-    firstName,
-    lastName,
-    email,
-    password,
-    role,
-    enrollmentNumber,
-    firstYearOfStudy
-  } = req.body;
 
   if (role === "2" && (!enrollmentNumber || !firstYearOfStudy)) {
     return res.status(400).json({
