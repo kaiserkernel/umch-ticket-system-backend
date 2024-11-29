@@ -242,7 +242,7 @@ const getReceivedInquiries = async (req, res) => {
       );
 
       // If the permission is not 'None', the ticket is visible
-      return permission && permission.permission !== "Responsible";
+      return permission && permission.permission === "Responsible";
     });
 
     console.log(filteredTickets, "===filteredTickets");
