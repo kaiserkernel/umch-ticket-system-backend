@@ -242,7 +242,7 @@ const getReceivedInquiries = async (req, res) => {
       );
 
       // If the permission is not 'None', the ticket is visible
-      return permission && permission.permission !== "None";
+      return permission && permission.permission !== "Responsible";
     });
 
     console.log(filteredTickets, "===filteredTickets");
@@ -368,20 +368,17 @@ const checkInquiry = async (req, res) => {
 
     const emailContent = `
     <h>Dear <strong>${inquiry.firstName} ${inquiry.lastName}</strong></h>
-    <p>Your ticket <strong>${inquiry.inquiryNumber}<strong> on <strong> ${
-      INQUIRYCATEGORIES[inquiry.inquiryCategory - 1]
-    }</strong> submitted at <strong>${
-      inquiry.createdAt
-    }</strong> is under checking now.</p>
+    <p>Your ticket <strong>${inquiry.inquiryNumber}<strong> on <strong> ${INQUIRYCATEGORIES[inquiry.inquiryCategory - 1]
+      }</strong> submitted at <strong>${inquiry.createdAt
+      }</strong> is under checking now.</p>
     <p>We will get back to you shortly with further updates.
     Wishing you a great day, and we will follow up with more information soon.</p>
     <br />
     <p>Best regards,</p>
     <p>${authedUser.firstName} ${authedUser.lastName}</p>
     <p>${authedUser.title ? authedUser.title : "Professor"}</p>
-    <p>${
-      authedUser.position ? positionNames[authedUser.position] : "Vice Rector"
-    }</p>
+    <p>${authedUser.position ? positionNames[authedUser.position] : "Vice Rector"
+      }</p>
     <p>${authedUser.email}</p>
     `;
 
