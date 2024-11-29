@@ -1,15 +1,14 @@
 const dotenv = require("dotenv");
-
 const mailjet = require("node-mailjet");
 const fs = require("fs");
 const path = require("path");
+
+dotenv.config();
 
 const MAILJET_API_KEY = process.env.MAIL_JET_API_KEY;
 const MAILJET_SECRET_KEY = process.env.MAIL_JET_SECRET_KEY;
 
 const mailjetClient = mailjet.apiConnect(MAILJET_API_KEY, MAILJET_SECRET_KEY);
-
-dotenv.config();
 
 async function sendEmail(
   toEmail,
@@ -21,8 +20,9 @@ async function sendEmail(
 ) {
   try {
     let request;
-    if (attachment == "") {
-      console.log(attachment, "====attachment");
+
+    if (!attachment) {
+      console.log("No attachment provided");
       request = mailjetClient.post("send", { version: "v3.1" }).request({
         Messages: [
           {
@@ -44,8 +44,13 @@ async function sendEmail(
       });
     } else {
       const filePath = path.join(__dirname, "..", "public", attachment);
+
+      if (!fs.existsSync(filePath)) {
+        throw new Error(`Attachment file not found: ${filePath}`);
+      }
+
       const fileContent = fs.readFileSync(filePath).toString("base64");
-      console.log(fileContent, "====filecontent");
+
       request = mailjetClient.post("send", { version: "v3.1" }).request({
         Messages: [
           {
@@ -75,10 +80,10 @@ async function sendEmail(
     }
 
     const result = await request;
-    console.log(result.body);
+    console.log("Email sent successfully:", result.body);
     return result.body;
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("Error sending email:", error.statusCode, error.response?.text);
     throw error;
   }
 }
