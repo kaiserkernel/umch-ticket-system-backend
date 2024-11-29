@@ -78,7 +78,6 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   const { email, password, enrollmentNumber, recaptChatoken } = req.body;
 
-  console.log(recaptChatoken, 're cap')
   // validation recaptcha
   const data = await verifyRecaptchaToken(recaptChatoken);
 
