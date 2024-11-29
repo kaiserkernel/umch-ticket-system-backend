@@ -26,10 +26,6 @@ async function detectLanguage(filePath) {
 
     const response = await axios.post(apiUrl, params);
 
-    console.log(
-      "Detected Language:",
-      response.data.translations[0].detected_source_language
-    );
     if (response.data.translations[0].detected_source_language == "EN") {
       return true;
     } else {

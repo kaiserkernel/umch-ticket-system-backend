@@ -49,10 +49,16 @@ async function submitInquiry(req, res) {
             __dirname,
             `../public/uploads/documents/${file.filename}`
           );
-          const result = await detectLanguage(uploadedDocPath);
-          console.log(result, "====result");
-          if (result === true) {
-            isNonEnglish = true; // Set a flag for invalid language
+          // Get the file extension
+          const fileExtension = path.extname(file.originalname).toLowerCase();
+
+          if (fileExtension == 'pdf' || fileExtension == 'doc' || fileExtension == 'docx' || fileExtension == 'txt') {
+            const result = await detectLanguage(uploadedDocPath);
+            if (result === true) {
+              isNonEnglish = true; // Set a flag for valid language
+            }
+          } else {
+            isNonEnglish = true;
           }
         }
       })
@@ -85,22 +91,19 @@ async function submitInquiry(req, res) {
 
         const emailContent = `
          <p><strong>Dear ${firstName} ${lastName},</strong></p>
-        <p>Thank you for submitting your <strong> ${
-          INQUIRYCATEGORIES[inquiryCategory - 1]
-        }</strong> on <strong> ${moment(newInquiry.createdAt).format(
-          "DD-MM-YYY hh:mm:ss A"
-        )}.</strong> We have received your ticket and it is now
-        under review with the following Ticket Number: <strong> ${
-          newInquiry.inquiryNumber
-        }.</strong>
+        <p>Thank you for submitting your <strong> ${INQUIRYCATEGORIES[inquiryCategory - 1]
+          }</strong> on <strong> ${moment(newInquiry.createdAt).format(
+            "DD-MM-YYY hh:mm:ss A"
+          )}.</strong> We have received your ticket and it is now
+        under review with the following Ticket Number: <strong> ${newInquiry.inquiryNumber
+          }.</strong>
         <p>We will get back to you shortly with further updates.
         Wishing you a great day, and we will follow up with more information soon.</p>
         <br />
         <br />
         <p>Best regards,</p>
-        <p>${process.env.SUPER_ADMIN_FIRSTNAME} ${
-          process.env.SUPER_ADMIN_LASTNAME
-        } </p>
+        <p>${process.env.SUPER_ADMIN_FIRSTNAME} ${process.env.SUPER_ADMIN_LASTNAME
+          } </p>
         <p>Professor</p>
         <p>Vice Rector</p>
         <p><${process.env.SUPER_ADMIN_EMAIL}</p>
