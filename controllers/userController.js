@@ -52,7 +52,7 @@ async function submitInquiry(req, res) {
           // Get the file extension
           const fileExtension = path.extname(file.originalname).toLowerCase();
 
-          if (fileExtension == 'pdf' || fileExtension == 'doc' || fileExtension == 'docx' || fileExtension == 'txt') {
+          if (fileExtension == 'pdf') {
             const result = await detectLanguage(uploadedDocPath);
             if (result === true) {
               isNonEnglish = true; // Set a flag for valid language
