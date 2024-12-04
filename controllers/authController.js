@@ -82,7 +82,7 @@ exports.login = async (req, res) => {
   const data = await verifyRecaptchaToken(recaptChatoken);
 
   if (!data.success || data.score < 0.5) {
-    return res.status(403).json({ success: false, error: "reCAPTCHA verification failed." });
+    return res.status(403).json({ success: false, errors: "reCAPTCHA verification failed. Try again" });
   }
 
   const errors = validationResult(req);
