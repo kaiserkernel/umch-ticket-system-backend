@@ -236,16 +236,16 @@ const getReceivedInquiries = async (req, res) => {
     const filteredTickets = inquiries.filter((ticket) => {
       // Find the matching permission for this ticket
       const permission = user?.category.find(
-        (p) =>
-          p.inquiryCategory === ticket.inquiryCategory &&
-          p.subCategory1 === ticket.subCategory1
+        (p) => {
+          if (p.subCategory1 !== 'null') {
+            return p.inquiryCategory == ticket.inquiryCategory && p.subCategory1 == ticket.subCategory1
+          } else {
+            return p.inquiryCategory == ticket.inquiryCategory
+          }
+        }
       );
-
-      // If the permission is not 'None', the ticket is visible
       return permission && permission.permission === "Responsible";
     });
-
-    console.log(filteredTickets, "===filteredTickets");
 
     if (req.user.email === process.env.SUPER_ADMIN_EMAIL)
       res.json({ inquiries: inquiries, userCategory: user.category });
