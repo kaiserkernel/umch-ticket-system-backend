@@ -152,9 +152,8 @@ const editRole = async (req, res) => {
     existingUser.position = position;
     existingUser.title = title;
     existingUser.category = category;
-    existingUser.password = password;
-    if (password === "") {
-      existingUser.password = "notModified";
+    if (password !== "") {
+      existingUser.password = password;
     }
 
     await existingUser.save();

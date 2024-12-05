@@ -67,7 +67,8 @@ const UserSchema = new mongoose.Schema({
 UserSchema.pre("save", function (next) {
   const user = this;
 
-  if (!user.isModified("password") || user.password === "notModified") { // notModified for account management edit role
+  // If no password is provided or it's not modified, skip password hashing
+  if (!user.password || !user.isModified("password")) {
     return next();
   }
 
