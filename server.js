@@ -9,6 +9,8 @@ const formRoutes = require("./routes/form");
 const adminRoutes = require("./routes/admin");
 const userRoutes = require("./routes/user");
 const emailTemplateRoutes = require("./routes/emailTemplate");
+const ticketGroupRoutes = require("./routes/ticketGroup");
+
 const path = require("path");
 const setupSwagger = require("./swagger/swagger");
 const socketIo = require("socket.io");
@@ -54,6 +56,7 @@ app.use("/api/form", formRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/emailTemplate", emailTemplateRoutes);
+app.use("/api/ticket-group", ticketGroupRoutes);
 
 setupSwagger(app);
 
