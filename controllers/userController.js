@@ -5,19 +5,10 @@ const { convertHtmlToPdf } = require("../services/wordConvertService");
 const { detectLanguage } = require("../services/detectLanguage");
 const path = require("path");
 const moment = require("moment");
+const TicketGroup = require("../models/TicketGroup");
 
 require("dotenv").config();
 
-const INQUIRYCATEGORIES = [
-  "Applications and Requests",
-  "Book rental UMCH library",
-  "Campus IT",
-  "Complaints",
-  "Internship",
-  "Medical Abilities",
-  "Thesis",
-  "Other"
-];
 async function submitInquiry(req, res) {
   // const bgImagePath = path.join(__dirname, "../public/docTemplate/bg.webp");
 
@@ -44,7 +35,7 @@ async function submitInquiry(req, res) {
 
     await Promise.all(
       req.files.map(async (file) => {
-        if (inquiryCategory === "1" && subCategory1 === "1") {
+        if (subCategory1 === "Absence") {
           const uploadedDocPath = path.join(
             __dirname,
             `../public/uploads/documents/${file.filename}`
@@ -64,7 +55,7 @@ async function submitInquiry(req, res) {
       })
     );
 
-    if (inquiryCategory === "1" && subCategory1 === "1") {
+    if (subCategory1 === "Absence") {
       if (!isNonEnglish) {
         return res.status(401).json({ message: "Please upload English PDFs" });
       }
@@ -72,6 +63,13 @@ async function submitInquiry(req, res) {
 
     (async () => {
       try {
+
+        // check if group exist with inquirycategory
+        const group = await TicketGroup.findById(inquiryCategory);
+        if (!group) {
+          return res.status(404).json({ message: "Not found Ticket group" });
+        }
+
         const newInquiry = new Inquiry({
           firstName,
           lastName,
@@ -91,10 +89,9 @@ async function submitInquiry(req, res) {
 
         const emailContent = `
          <p><strong>Dear ${firstName} ${lastName},</strong></p>
-        <p>Thank you for submitting your <strong> ${INQUIRYCATEGORIES[inquiryCategory - 1]
-          }</strong> on <strong> ${moment(newInquiry.createdAt).format(
-            "DD-MM-YYY hh:mm:ss A"
-          )}.</strong> We have received your ticket and it is now
+        <p>Thank you for submitting your <strong> ${group.name}</strong> on <strong> ${moment(newInquiry.createdAt).format(
+          "DD-MM-YYY hh:mm:ss A"
+        )}.</strong> We have received your ticket and it is now
         under review with the following Ticket Number: <strong> ${newInquiry.inquiryNumber
           }.</strong>
         <p>We will get back to you shortly with further updates.
@@ -179,7 +176,6 @@ const updateUserProfile = async (req, res) => {
     if (req?.file?.filename) {
       user.avatar = `/uploads/images/avatar/${req.file.filename}`;
     }
-    console.log(user, "===user");
     // Save the updated user data
     await user.save();
 

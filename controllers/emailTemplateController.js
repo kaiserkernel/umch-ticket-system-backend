@@ -63,7 +63,6 @@ const getEmailTemplate = async (req, res) => {
 const getEmailTemplatesByCategory = async (req, res) => {
   try {
     const { inquiryCategory, subCategory } = req.body;
-    console.log(req.body);
 
     const existingTemplates = await EmailTemplate.find({
       inquiryCategory: inquiryCategory,
@@ -100,7 +99,6 @@ const getAllEmailTemplate = async (req, res) => {
 const editEmailTemplate = async (req, res) => {
   try {
     const { id, emailTemplateTitle, emailTemplateContent } = req.body;
-    console.log(req.body);
 
     const emailTemplate = await EmailTemplate.findById(id);
     emailTemplate.emailTemplateTitle = emailTemplateTitle;

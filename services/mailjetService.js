@@ -22,7 +22,6 @@ async function sendEmail(
     let request;
 
     if (!attachment) {
-      console.log("No attachment provided");
       request = mailjetClient.post("send", { version: "v3.1" }).request({
         Messages: [
           {
@@ -80,7 +79,6 @@ async function sendEmail(
     }
 
     const result = await request;
-    console.log("Email sent successfully:", result.body);
     return result.body;
   } catch (error) {
     console.error("Error sending email:", error.statusCode, error.response?.text);

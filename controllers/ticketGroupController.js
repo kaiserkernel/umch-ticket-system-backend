@@ -1,4 +1,5 @@
 const TicketGroup = require("../models/TicketGroup");
+const Counter = require("../models/Counter");
 
 require("dotenv").config();
 
@@ -24,6 +25,15 @@ const createTicketGroup = async (req, res) => {
             prefix,
             ticketTypes: []
         })
+
+        // check if counter for this prefix exist or not
+        const counter = await Counter.findOne({ group: prefix });
+        if (!counter) {
+            const newCounter = new Counter({
+                group: prefix
+            });
+            await newCounter.save();
+        }
 
         // Save to database
         await newTicketGroup.save();
@@ -150,6 +160,13 @@ const updateTicketGroup = async (req, res) => {
             return res.status(404).json({ message: "Not found ticket group" })
         }
 
+        // check if counter is exist with new prefix or not
+        const counter = Counter.findOne({ group: prefix });
+        if (!counter) {
+            const newCounter = new Counter({ group: prefix });
+            await newCounter();
+        }
+
         ticketGroup.name = name;
         ticketGroup.prefix = prefix;
         await ticketGroup.save();   // Initialize with an empty subTitle array
@@ -195,42 +212,10 @@ const deleteTicketGroup = async (req, res) => {
 
 }
 
-const getAllRegistedTicketType = async (req, res) => {
-    try {
-        const result = await TicketGroup.aggregate([
-            {
-                $unwind: "$ticketTypes"
-            },
-            {
-                $project: {
-                    key: "$ticketTypes",
-                    value: "$_id",
-                    _id: 0
-                }
-            },
-            {
-                $replaceWith: {
-                    $arrayToObject: [[
-                        { k: "$key", v: "$value" }
-                    ]]
-                }
-            }
-        ])
-
-        return res.status(200).json({
-            message: "Ticket types fetched successfully",
-            data: result
-        })
-    } catch (error) {
-        console.log(error, "Get all registed types error")
-    }
-}
-
 module.exports = {
     createTicketGroup,
     addTicketTypeToGroup,
     getAllTicketGroups,
     updateTicketGroup,
-    deleteTicketGroup,
-    getAllRegistedTicketType
+    deleteTicketGroup
 }

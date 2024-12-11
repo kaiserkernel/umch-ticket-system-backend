@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Counter = require("./Counter");
+const TicketGroup = require("./TicketGroup");
 
 const inquirySchema = new mongoose.Schema({
   firstName: {
@@ -29,7 +30,8 @@ const inquirySchema = new mongoose.Schema({
     min: 1900
   },
   inquiryCategory: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "TicketGroup",
     required: true
   },
   subCategory1: {
@@ -76,7 +78,7 @@ const inquirySchema = new mongoose.Schema({
     type: String
   },
   inquiryNumber: {
-    type: Number,
+    type: String,
     unique: true
   },
   createdAt: { type: Date, default: Date.now }
@@ -84,12 +86,17 @@ const inquirySchema = new mongoose.Schema({
 
 inquirySchema.pre("save", async function (next) {
   if (this.isNew) {
-    const counter = await Counter.findOneAndUpdate(
-      { _id: "inquiryID" },
-      { $inc: { sequenceValue: 1 } },
-      { new: true, upsert: true }
-    );
-    this.inquiryNumber = counter.sequenceValue;
+    const info = this;
+    const groupInfo = await TicketGroup.findById(info.inquiryCategory);
+
+    if (groupInfo) {
+      const counter = await Counter.findOneAndUpdate(
+        { group: groupInfo.prefix },
+        { $inc: { sequenceValue: 1 } },
+        { new: true, upsert: true }
+      );
+      this.inquiryNumber = counter.group + "-" + counter.sequenceValue;
+    }
   }
   next();
 });

@@ -13,16 +13,6 @@ const positionNames = process.env.POSITION_NAMES.split(",");
 const subCategoryNames = process.env.SUB_CATEGORIES.split(",");
 const inquriyCategoryNames = process.env.INQUIRY_CATEGORIES.split(",");
 
-const INQUIRYCATEGORIES = [
-  "Applications and Requests",
-  "Book rental UMCH library",
-  "Campus IT",
-  "Complaints",
-  "Internship",
-  "Medical Abilities",
-  "Thesis",
-  "Other"
-];
 // Get all users
 const getUsers = async (req, res) => {
   try {
@@ -220,33 +210,16 @@ const getReceivedInquiries = async (req, res) => {
 
     const inquiries = await Inquiry.find();
 
-    // const visibleCategories = new Set();
-
-    // user.category.forEach((cat) => {
-    //   if (cat.permission !== "None") {
-    //     if (cat.subCategory1) visibleCategories.add(cat.subCategory1);
-    //     else visibleCategories.add(cat.inquiryCategory);
-    //   }
-    // });
-
-    // const filteredInquiries = inquiries.filter((inquiry) => {
-    //   return (
-    //     visibleCategories.has(inquiry.inquiryCategory) ||
-    //     visibleCategories.has(inquiry.subCategory1)
-    //   );
-    // });
-
     const filteredTickets = inquiries.filter((ticket) => {
       // Find the matching permission for this ticket
       const permission = user?.category.find(
         (p) => {
           if (p.subCategory1 !== 'null') {
-            return p.inquiryCategory == ticket.inquiryCategory && p.subCategory1 == ticket.subCategory1
-          } else {
-            return p.inquiryCategory == ticket.inquiryCategory
+            return p.subCategory1 == ticket.subCategory1
           }
         }
       );
+
       return permission && permission.permission === "Responsible";
     });
 
@@ -265,7 +238,6 @@ const getInquiriesByEnrollmentNumber = async (req, res) => {
 
   try {
     const user = await User.findById(req.user.id).select("category");
-
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -282,30 +254,6 @@ const getInquiriesByEnrollmentNumber = async (req, res) => {
       return res.status(200).json(inquiries);
     }
 
-    // const visibleCategories = new Set();
-    // user.category.forEach((cat) => {
-    //   if (cat.permission !== "None") {
-    //     if (cat.subCategory1) visibleCategories.add(cat.subCategory1);
-    //     else visibleCategories.add(cat.inquiryCategory);
-    //   }
-    // });
-
-    // const filteredInquiries = inquiries.filter((inquiry) => {
-    //   return (
-    //     visibleCategories.has(inquiry.inquiryCategory) ||
-    //     visibleCategories.has(inquiry.subCategory1)
-    //   );
-    // });
-
-    // if (filteredInquiries.length === 0) {
-    //   return res
-    //     .status(404)
-    //     .json({ message: "No inquiries found within accessible categories." });
-    // }
-
-    // if (req.user.email === process.env.SUPER_ADMIN_EMAIL)
-    //   return res.status(200).json(inquiries);
-    // else return res.status(200).json(filteredInquiries);
   } catch (error) {
     console.error(error);
     return res.status(500).json({
@@ -324,7 +272,6 @@ const getInquiryByID = async (req, res) => {
 
     const result = await Inquiry.findById(req.params.id);
     let isOriginalClicked = false;
-    console.log(result);
     if (result.isClicked === 1) {
       isOriginalClicked = true;
     }
@@ -359,7 +306,7 @@ const getInquiryByID = async (req, res) => {
 // Check an inquiry
 const checkInquiry = async (req, res) => {
   try {
-    const inquiry = await Inquiry.findById(req.params.id);
+    const inquiry = await Inquiry.findById(req.params.id).populate("inquiryCategory");
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
 
     const authedUser = await User.findById(req.user.id).select(
@@ -371,8 +318,7 @@ const checkInquiry = async (req, res) => {
 
     const emailContent = `
     <h>Dear <strong>${inquiry.firstName} ${inquiry.lastName}</strong></h>
-    <p>Your ticket <strong>${inquiry.inquiryNumber}<strong> on <strong> ${INQUIRYCATEGORIES[inquiry.inquiryCategory - 1]
-      }</strong> submitted at <strong>${inquiry.createdAt
+    <p>Your ticket <strong>${inquiry.inquiryNumber}<strong> on <strong> ${inquiry.inquiryCategory.name}</strong> submitted at <strong>${inquiry.createdAt
       }</strong> is under checking now.</p>
     <p>We will get back to you shortly with further updates.
     Wishing you a great day, and we will follow up with more information soon.</p>
@@ -405,7 +351,6 @@ const checkInquiry = async (req, res) => {
 
 // Accept an inquiry
 const acceptInquiry = async (req, res) => {
-  console.log(req.body, "====accept inquiry");
   const { replaceSubject, replacedEmailTemplate, id } = req.body;
   try {
     const inquiry = await Inquiry.findById(id);
@@ -424,7 +369,6 @@ const acceptInquiry = async (req, res) => {
       }
     );
     inquiry.emailContent = updatedHtmlContent;
-    console.log(inquiry);
     await inquiry.save();
 
     const categoryName = inquiry.subCategory1
@@ -450,7 +394,6 @@ const acceptInquiry = async (req, res) => {
 };
 
 const acceptEnrollmentInquiry = async (req, res) => {
-  console.log(req.body, "====accept enrollment inquiry");
   const {
     replaceSubject,
     replacedEmailTemplate,
@@ -490,17 +433,13 @@ const acceptEnrollmentInquiry = async (req, res) => {
           }
         );
         inquiry.emailContent = updatedHtmlContent;
-        console.log(inquiry);
         await inquiry.save();
-
-        console.log(documents, "====enrollment  documents");
 
         const categoryName = inquiry.subCategory1
           ? subCategoryNames[inquiry.subCategory1 - 1]
           : inquriyCategoryNames[inquiry.inquiryCategory - 1];
 
         // Send the confirmation email
-        console.log(result, "====result");
         await sendEmail(
           inquiry.email,
           inquiry.firstName + inquiry.lastName,
@@ -526,7 +465,6 @@ const acceptEnrollmentInquiry = async (req, res) => {
 };
 
 const acceptExamInspection = async (req, res) => {
-  console.log(req.body, "====accept enrollment inquiry");
   const {
     replaceSubject,
     replacedEmailTemplate,
@@ -558,7 +496,6 @@ const acceptExamInspection = async (req, res) => {
         }
       );
       inquiry.emailContent = updatedHtmlContent;
-      console.log(inquiry);
       await inquiry.save();
 
       const categoryName = inquiry.subCategory1
@@ -566,7 +503,6 @@ const acceptExamInspection = async (req, res) => {
         : inquriyCategoryNames[inquiry.inquiryCategory - 1];
 
       // Send the confirmation email
-      console.log(result, "====result");
 
       await sendEmail(
         inquiry.email,
@@ -659,7 +595,6 @@ const acceptTransferTarguMuresInquiry = async (req, res) => {
 
 const processTranscriptRecord = async (req, res) => {
   const { id } = req.params;
-  console.log(req.params);
   try {
     const inquiry = await Inquiry.findById(id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
@@ -677,7 +612,6 @@ const processTranscriptRecord = async (req, res) => {
 };
 const doneTranscriptRecord = async (req, res) => {
   const { id } = req.params;
-  console.log(req.params);
   try {
     const inquiry = await Inquiry.findById(id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
@@ -711,7 +645,6 @@ const NotifyTranscriptRecord = async (req, res) => {
   //   res.status(500).json({ message: "Error rejecting inquiry", error });
   // }
 
-  console.log(req.body, "====accept inquiry");
   const { replaceSubject, replacedEmailTemplate, id } = req.body;
   try {
     const inquiry = await Inquiry.findById(id);
@@ -730,7 +663,6 @@ const NotifyTranscriptRecord = async (req, res) => {
       }
     );
     inquiry.emailContent = updatedHtmlContent;
-    console.log(inquiry);
     await inquiry.save();
 
     const categoryName = inquiry.subCategory1
@@ -832,7 +764,6 @@ const sendPassEmail = async (req, res) => {
     "</p><br />";
 
   Object.entries(selectedTicket?.details).forEach(([key, value]) => {
-    console.log(`Key: ${key}, Value: ${value}`);
     emailContent =
       emailContent + "<p>" + key + ":" + "<span>" + value + "</span>" + "</p>";
   });
