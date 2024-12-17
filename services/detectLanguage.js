@@ -1,4 +1,4 @@
-const pdf = require("pdf-parse");
+const pdfParser = require("pdf-parse");
 const fs = require("fs");
 const axios = require("axios");
 
@@ -7,7 +7,7 @@ async function detectLanguage(filePath) {
     const dataBuffer = fs.readFileSync(filePath);
 
     // Extract text from PDF
-    const pdfData = await pdf(dataBuffer);
+    const pdfData = await pdfParser(dataBuffer);
     const text = pdfData.text;
 
     // Check if the text exists and handle empty PDFs

@@ -18,7 +18,13 @@ const {
   deleteUser,
   resetPasswordToDefault,
   acceptTransferTarguMuresInquiry,
-  editRole
+  editRole,
+  closeInquiry,
+  internalNote,
+  replyStudent,
+  getInternalNote,
+  getReplyStudentMessageList,
+  getReplyStudentMessage,
 } = require("../controllers/adminController");
 const checkSuperAdmin = require("../middlewares/checkSuperAdmin");
 const authMiddleware = require("../middlewares/authMiddleware");
@@ -284,12 +290,28 @@ router.post("/send-pass-email", authMiddleware, sendPassEmail);
 router.delete("/delete-user/:id", authMiddleware, deleteUser);
 
 router.get("/reset-password/:id", authMiddleware, resetPasswordToDefault);
-router.post("/edit-role", authMiddleware, editRole);
+router.post("/edit-role", authMiddleware, checkSuperAdmin, editRole);
 
 router.post(
   "/inquiries/transferTarguMures/accept",
   authMiddleware,
   acceptTransferTarguMuresInquiry
 );
+
+router.post(
+  "/inquiries/close/:id",
+  authMiddleware,
+  closeInquiry
+)
+
+router.post("/internal-note", authMiddleware, internalNote);
+
+router.post("/reply-student", authMiddleware, replyStudent);
+
+router.get("/internal-note", authMiddleware, getInternalNote);
+
+router.get("/reply-student/all", authMiddleware, getReplyStudentMessageList)
+
+router.get("/reply-student", authMiddleware, getReplyStudentMessage)
 
 module.exports = router;

@@ -1,20 +1,18 @@
 const mongoose = require("mongoose");
 
 const emailTemplateSchema = new mongoose.Schema({
-  category: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "TicketCategory",
+  inquiryCategory: {
+    type: String,
     required: true
   },
-  subCategory: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "TicketCategory.subCategory",
-    required: true
-  },
-  title: {
+  subCategory1: {
     type: String
   },
-  content: {
+  emailTemplateTitle: {
+    type: String,
+    required: true
+  },
+  emailTemplateContent: {
     type: String,
     required: true
   },
@@ -25,6 +23,10 @@ const emailTemplateSchema = new mongoose.Schema({
   defaultFlag: {
     type: Boolean,
     default: false
+  },
+  emailTemplateState: {
+    type: String, // accept   reject    close
+    required: true
   }
 });
 

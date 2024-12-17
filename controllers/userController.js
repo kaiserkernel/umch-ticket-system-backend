@@ -5,13 +5,13 @@ const { convertHtmlToPdf } = require("../services/wordConvertService");
 const { detectLanguage } = require("../services/detectLanguage");
 const path = require("path");
 const moment = require("moment");
-const TicketGroup = require("../models/TicketGroup");
+const EmailTemplate = require("../models/EmailTemplate");
+const { detectAndTranslate, extractTextFromFile } = require("../middlewares/upload");
+const fs = require("fs");
 
 require("dotenv").config();
 
 async function submitInquiry(req, res) {
-  // const bgImagePath = path.join(__dirname, "../public/docTemplate/bg.webp");
-
   try {
     const {
       firstName,
@@ -26,103 +26,116 @@ async function submitInquiry(req, res) {
       agreement
     } = req.body;
 
-    const documents = req.files.map((file) => ({
-      url: `/uploads/documents/${file.filename}`,
-      filename: file.originalname
-    }));
+    const documents = [];
+    for (const file of req.files) {
+      const originalFilePath = path.join(
+        __dirname,
+        `../public/uploads/documents/${file.filename}`
+      );
 
-    let isNonEnglish = false;
-
-    await Promise.all(
-      req.files.map(async (file) => {
-        if (subCategory1 === "Absence") {
-          const uploadedDocPath = path.join(
+      // Process file for language detection and translation
+      const extname = path.extname(file.originalname).toLowerCase();
+      if (
+        [".pdf", ".docx", ".txt", ".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"].includes(
+          extname
+        )
+      ) {
+        const textContent = await extractTextFromFile(originalFilePath, extname);
+        const { text: translatedText, from } = await detectAndTranslate(
+          textContent
+        );
+        // Save translated content if not in English
+        if (from !== "en") {
+          const translatedFilePath = path.join(
             __dirname,
-            `../public/uploads/documents/${file.filename}`
+            `../public/uploads/documents/translated_${file.filename}.txt`
           );
-          // Get the file extension
-          const fileExtension = path.extname(file.originalname).toLowerCase();
+          fs.writeFileSync(translatedFilePath, translatedText);
 
-          if (fileExtension == 'pdf') {
-            const result = await detectLanguage(uploadedDocPath);
-            if (result === true) {
-              isNonEnglish = true; // Set a flag for valid language
-            }
-          } else {
-            isNonEnglish = true;
-          }
+          const translatedFileName = path.basename(file.originalname, path.extname(file.originalname)) + ".txt";
+
+          documents.push({
+            url: `/uploads/documents/${file.filename}`,
+            filename: file.originalname,
+            translatedFileUrl: `/uploads/documents/translated_${file.filename}.txt`,
+            translatedFileName
+          });
+        } else {
+          documents.push({
+            url: `/uploads/documents/${file.filename}`,
+            filename: file.originalname,
+          });
         }
-      })
-    );
-
-    if (subCategory1 === "Absence") {
-      if (!isNonEnglish) {
-        return res.status(401).json({ message: "Please upload English PDFs" });
+      } else {
+        // For unsupported file types, only save the original
+        documents.push({
+          url: `/uploads/documents/${file.filename}`,
+          filename: file.originalname,
+        });
       }
     }
 
-    (async () => {
-      try {
+    const newInquiry = new Inquiry({
+      firstName,
+      lastName,
+      email,
+      enrollmentNumber,
+      firstYearOfStudy,
+      inquiryCategory,
+      subCategory1,
+      subCategory2,
+      details: JSON.parse(details),
+      agreement,
+      documents,
+      status: 0
+    });
 
-        // check if group exist with inquirycategory
-        const group = await TicketGroup.findById(inquiryCategory);
-        if (!group) {
-          return res.status(404).json({ message: "Not found Ticket group" });
-        }
+    await newInquiry.save();
 
-        const newInquiry = new Inquiry({
-          firstName,
-          lastName,
-          email,
-          enrollmentNumber,
-          firstYearOfStudy,
-          inquiryCategory,
-          subCategory1,
-          subCategory2,
-          details: JSON.parse(details),
-          agreement,
-          documents,
-          status: 0
-        });
+    // Generate confirmation email content
+    const studentEmailTemplate = await EmailTemplate.findOne({
+      subCategory1: "student",
+    });
 
-        await newInquiry.save();
+    let emailContent = "";
+    if (studentEmailTemplate) {
+      emailContent = studentEmailTemplate.emailTemplateContent.replace("[student]", firstName + " " + lastName)
+        .replace("[inquiryCategory]", inquiryCategory)
+        .replace("[subCategory1]", subCategory1)
+        .replace("[createdTime]", moment(newInquiry.createdAt).format("DD-MM-YYY hh:mm:ss A"))
+        .replace("[inquiryNumber]", newInquiry.inquiryNumber)
+    } else {
+      emailContent = `
+     <p><strong>Dear ${firstName} ${lastName},</strong></p>
+    <p>Thank you for submitting your <strong> ${newInquiry.inquiryCategory}</strong> on <strong> ${moment(newInquiry.createdAt).format(
+        "DD-MM-YYY hh:mm:ss A"
+      )}.</strong> We have received your ticket and it is now
+    under review with the following Ticket Number: <strong> ${newInquiry.inquiryNumber
+        }.</strong>
+    <p>We will get back to you shortly with further updates.
+    Wishing you a great day, and we will follow up with more information soon.</p>
+    <br />
+    <br />
+    <p>Best regards,</p>
+    <p>Professor</p>
+    <p>Vice Rector</p>
+    `;
+    }
 
-        const emailContent = `
-         <p><strong>Dear ${firstName} ${lastName},</strong></p>
-        <p>Thank you for submitting your <strong> ${group.name}</strong> on <strong> ${moment(newInquiry.createdAt).format(
-          "DD-MM-YYY hh:mm:ss A"
-        )}.</strong> We have received your ticket and it is now
-        under review with the following Ticket Number: <strong> ${newInquiry.inquiryNumber
-          }.</strong>
-        <p>We will get back to you shortly with further updates.
-        Wishing you a great day, and we will follow up with more information soon.</p>
-        <br />
-        <br />
-        <p>Best regards,</p>
-        <p>${process.env.SUPER_ADMIN_FIRSTNAME} ${process.env.SUPER_ADMIN_LASTNAME
-          } </p>
-        <p>Professor</p>
-        <p>Vice Rector</p>
-        <p><${process.env.SUPER_ADMIN_EMAIL}</p>
-        `;
+    // Send the confirmation email
+    await sendEmail(
+      email,
+      firstName + " " + lastName,
+      `Your Ticket Submission Confirmation - Ticket Number ${newInquiry.inquiryNumber}!`,
+      `Dear ${firstName} ${lastName}`,
+      emailContent
+    );
 
-        // Send the confirmation email
-        await sendEmail(
-          email,
-          firstName + " " + lastName,
-          `Your Ticket Submission Confirmation - Ticket Number ${newInquiry.inquiryNumber}!`,
-          `Dear ${firstName} ${lastName}`,
-          emailContent
-        );
+    return res.status(201).json({
+      message: "Inquiry submitted successfully",
+      inquiry: newInquiry
+    });
 
-        return res.status(201).json({
-          message: "Inquiry submitted successfully",
-          inquiry: newInquiry
-        });
-      } catch (error) {
-        console.error("Error:", error);
-      }
-    })();
   } catch (error) {
     console.error("Error submitting inquiry:", error);
     return res.status(500).json({ error: "Failed to submit inquiry" });

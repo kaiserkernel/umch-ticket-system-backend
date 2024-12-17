@@ -60,11 +60,11 @@ const createTicketGroup = async (req, res) => {
 }
 
 const addTicketTypeToGroup = async (req, res) => {
-    const { id, name } = req.body;
+    const { id, inquiryCategory, subCategory1 } = req.body;
 
     try {
-        // validation - name 
-        if (!name || typeof name !== 'string') {
+        // validation
+        if (!inquiryCategory || typeof inquiryCategory !== 'string') {
             return res.status(400).json({ "message": "Name is required for adding group" })
         }
 
@@ -75,22 +75,44 @@ const addTicketTypeToGroup = async (req, res) => {
         }
 
         // validation - Check if the ticket type already exists in that group
-        const existingTicketType = newGroup.ticketTypes.find(log => log === name);
+        const existingTicketType = newGroup.ticketTypes.find(log => {
+            if (!subCategory1 && log.inquiryCategory === inquiryCategory) {
+                return true
+            }
+            if (log.inquiryCategory === inquiryCategory && log.subCategory1 === subCategory1) {
+                return true;
+            }
+        });
 
         if (existingTicketType) {
             return res.status(400).json({
-                message: `Ticket type (${name}) already exists in this group`,
+                message: `Ticket type (${subCategory1 ? (subCategory1 === "Other" ? `Other-${inquiryCategory}` : subCategory1) : inquiryCategory}) already exists in this group`,
                 data: existingTicketType // Optional: include the conflicting subgroup in the response
             });
         }
 
-        // add this ticket type to this groupz
-        newGroup.ticketTypes.push(name); // Add new subGroup to the TicketGroup
+        // add this ticket type to this group
+        newGroup.ticketTypes.push({
+            inquiryCategory,
+            subCategory1: subCategory1 ? subCategory1 : ""
+        }); // Add new subGroup to the TicketGroup
 
         // remove from old group
         await TicketGroup.updateMany(
-            { ticketTypes: name }, // Find TicketGroups that contain the ticket type
-            { $pull: { ticketTypes: name } } // Remove the specific ticket type
+            {
+                ticketTypes: {
+                    inquiryCategory,
+                    subCategory1: subCategory1 ? subCategory1 : ""
+                }
+            }, // Find TicketGroups that contain the ticket type
+            {
+                $pull: {
+                    ticketTypes: {
+                        inquiryCategory,
+                        subCategory1: subCategory1 ? subCategory1 : ""
+                    }
+                }
+            } // Remove the specific ticket type
         );
 
         await newGroup.save();   // Initialize with an empty subTitle array

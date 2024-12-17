@@ -12,15 +12,21 @@ const TicketGroupSchema = new mongoose.Schema({
         unique: true
     },
     ticketTypes: [{
-        type: String,
-        required: false,
-        unique: false
+        inquiryCategory: {
+            type: String
+        },
+        subCategory1: {
+            type: String
+        }
     }],
     createdAt: {
         type: Date,
         default: Date.now
     }
 })
+
+// Disable _id for ticketTypes field
+TicketGroupSchema.path('ticketTypes').schema.set('_id', false);
 
 const TicketGroup = mongoose.model("TicketGroup", TicketGroupSchema);
 

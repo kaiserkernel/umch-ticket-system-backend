@@ -30,8 +30,7 @@ const inquirySchema = new mongoose.Schema({
     min: 1900
   },
   inquiryCategory: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "TicketGroup",
+    type: String,
     required: true
   },
   subCategory1: {
@@ -53,6 +52,12 @@ const inquirySchema = new mongoose.Schema({
       filename: {
         type: String,
         required: false
+      },
+      translatedFileUrl: {
+        type: String
+      },
+      translatedFileName: {
+        type: String
       }
     }
   ],
@@ -62,7 +67,15 @@ const inquirySchema = new mongoose.Schema({
   },
   status: {
     type: Number,
-    enum: [0, 1, 2, 3, 4, 5, 6],
+    enum: [0, 1, 2, 3, 4, 5, 6, 7],
+    // 0 : reopen
+    // 1 : check
+    // 2 : accept
+    // 3 : reject
+    // 4 : process - transcript record
+    // 5 : done - transcript record
+    // 6 : notify - transcript record
+    // 7 : close
     default: 0,
     required: true
   },
@@ -87,11 +100,25 @@ const inquirySchema = new mongoose.Schema({
 inquirySchema.pre("save", async function (next) {
   if (this.isNew) {
     const info = this;
-    const groupInfo = await TicketGroup.findById(info.inquiryCategory);
+    const groupInfo = await TicketGroup.findOne({
+      ticketTypes: {
+        $elemMatch: {
+          inquiryCategory: info.inquiryCategory,
+          subCategory1: info.subCategory1
+        }
+      }
+    });
 
     if (groupInfo) {
       const counter = await Counter.findOneAndUpdate(
         { group: groupInfo.prefix },
+        { $inc: { sequenceValue: 1 } },
+        { new: true, upsert: true }
+      );
+      this.inquiryNumber = counter.group + "-" + counter.sequenceValue;
+    } else {
+      const counter = await Counter.findOneAndUpdate(
+        { group: "default" },
         { $inc: { sequenceValue: 1 } },
         { new: true, upsert: true }
       );

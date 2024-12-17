@@ -49,7 +49,6 @@ async function sendEmail(
       }
 
       const fileContent = fs.readFileSync(filePath).toString("base64");
-
       request = mailjetClient.post("send", { version: "v3.1" }).request({
         Messages: [
           {
@@ -81,7 +80,7 @@ async function sendEmail(
     const result = await request;
     return result.body;
   } catch (error) {
-    console.error("Error sending email:", error.statusCode, error.response?.text);
+    console.error("Error sending email:", error.statusCode, error.response?.text, error);
     throw error;
   }
 }

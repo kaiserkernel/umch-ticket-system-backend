@@ -2,6 +2,7 @@ const { validationResult } = require("express-validator");
 const User = require("../models/User");
 const Inquiry = require("../models/Inquiry");
 const { sendEmail } = require("../services/mailjetService");
+const AdditionalMessage = require("../models/AdditionalMessage");
 
 const {
   convertHtmlToPdf,
@@ -12,6 +13,13 @@ require("dotenv").config();
 const positionNames = process.env.POSITION_NAMES.split(",");
 const subCategoryNames = process.env.SUB_CATEGORIES.split(",");
 const inquriyCategoryNames = process.env.INQUIRY_CATEGORIES.split(",");
+
+function formatWord(word) {
+  // Add a space before each capital letter
+  const spacedWord = word.replace(/([A-Z])/g, ' $1').trim();
+  // Capitalize the first letter
+  return spacedWord.charAt(0).toUpperCase() + spacedWord.slice(1);
+}
 
 // Get all users
 const getUsers = async (req, res) => {
@@ -210,21 +218,20 @@ const getReceivedInquiries = async (req, res) => {
 
     const inquiries = await Inquiry.find();
 
-    const filteredTickets = inquiries.filter((ticket) => {
+    const filteredTickets = inquiries.filter((log) => {
       // Find the matching permission for this ticket
-      const permission = user?.category.find(
-        (p) => {
-          if (p.subCategory1 !== 'null') {
-            return p.subCategory1 == ticket.subCategory1
-          }
-        }
-      );
-
-      return permission && permission.permission === "Responsible";
+      const userPermissionForTicket = user.category.find((typeInfo) => {
+        // Ensure inquiryCategory and subCategory1 match
+        return (
+          typeInfo.inquiryCategory === log.inquiryCategory &&
+          typeInfo.subCategory1 === log.subCategory1
+        );
+      });
+      return userPermissionForTicket && userPermissionForTicket.permission !== "None";
     });
 
     if (req.user.email === process.env.SUPER_ADMIN_EMAIL)
-      res.json({ inquiries: inquiries, userCategory: user.category });
+      res.json({ inquiries: inquiries, userCategory: "SuperAdmin" });
     else res.json({ inquiries: filteredTickets, userCategory: user.category });
   } catch (error) {
     res.status(500).json({ message: "Error fetching inquiries", error });
@@ -240,6 +247,10 @@ const getInquiriesByEnrollmentNumber = async (req, res) => {
     const user = await User.findById(req.user.id).select("category");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!enrollmentNumber) {
+      return res.status(404).json({ message: "Enrollment is required" })
     }
 
     const inquiries = await Inquiry.find({
@@ -356,10 +367,6 @@ const acceptInquiry = async (req, res) => {
     const inquiry = await Inquiry.findById(id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
 
-    const authedUser = await User.findById(req.user.id).select(
-      "email firstName lastName title position category"
-    );
-
     inquiry.status = 2;
     inquiry.isClicked = 0;
     const updatedHtmlContent = replacedEmailTemplate.replace(
@@ -371,15 +378,11 @@ const acceptInquiry = async (req, res) => {
     inquiry.emailContent = updatedHtmlContent;
     await inquiry.save();
 
-    const categoryName = inquiry.subCategory1
-      ? subCategoryNames[inquiry.subCategory1 - 1]
-      : inquriyCategoryNames[inquiry.inquiryCategory - 1];
-
     // Send the confirmation email
     await sendEmail(
       inquiry.email,
       inquiry.firstName + inquiry.lastName,
-      `Decision on Your Request of ${categoryName} - Ticket Number ${inquiry.inquiryNumber}!`,
+      replaceSubject,
       `Dear ${inquiry.firstName} ${inquiry.lastName}`,
       replacedEmailTemplate
     );
@@ -408,10 +411,6 @@ const acceptEnrollmentInquiry = async (req, res) => {
     const inquiry = await Inquiry.findById(id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
 
-    const authedUser = await User.findById(req.user.id).select(
-      "email firstName lastName title position category"
-    );
-
     (async () => {
       try {
         let documents;
@@ -434,10 +433,6 @@ const acceptEnrollmentInquiry = async (req, res) => {
         );
         inquiry.emailContent = updatedHtmlContent;
         await inquiry.save();
-
-        const categoryName = inquiry.subCategory1
-          ? subCategoryNames[inquiry.subCategory1 - 1]
-          : inquriyCategoryNames[inquiry.inquiryCategory - 1];
 
         // Send the confirmation email
         await sendEmail(
@@ -478,13 +473,7 @@ const acceptExamInspection = async (req, res) => {
     const inquiry = await Inquiry.findById(id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
 
-    const authedUser = await User.findById(req.user.id).select(
-      "email firstName lastName title position category"
-    );
-
     try {
-      let documents;
-
       inquiry.status = 2;
       inquiry.isClicked = 0;
       await inquiry.save();
@@ -498,12 +487,7 @@ const acceptExamInspection = async (req, res) => {
       inquiry.emailContent = updatedHtmlContent;
       await inquiry.save();
 
-      const categoryName = inquiry.subCategory1
-        ? subCategoryNames[inquiry.subCategory1 - 1]
-        : inquriyCategoryNames[inquiry.inquiryCategory - 1];
-
       // Send the confirmation email
-
       await sendEmail(
         inquiry.email,
         inquiry.firstName + inquiry.lastName,
@@ -540,10 +524,6 @@ const acceptTransferTarguMuresInquiry = async (req, res) => {
     let result;
     const inquiry = await Inquiry.findById(id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
-
-    const authedUser = await User.findById(req.user.id).select(
-      "email firstName lastName title position category"
-    );
 
     (async () => {
       try {
@@ -610,6 +590,7 @@ const processTranscriptRecord = async (req, res) => {
     res.status(500).json({ message: "Error rejecting inquiry", error });
   }
 };
+
 const doneTranscriptRecord = async (req, res) => {
   const { id } = req.params;
   try {
@@ -627,6 +608,7 @@ const doneTranscriptRecord = async (req, res) => {
     res.status(500).json({ message: "Error rejecting inquiry", error });
   }
 };
+
 const NotifyTranscriptRecord = async (req, res) => {
   // const { id } = req.params;
   // console.log(req.params);
@@ -709,15 +691,11 @@ const rejectInquiry = async (req, res) => {
     inquiry.emailContent = updatedHtmlContent;
     await inquiry.save();
 
-    const categoryName = inquiry.subCategory1
-      ? subCategoryNames[inquiry.subCategory1 - 1]
-      : inquriyCategoryNames[inquiry.inquiryCategory - 1];
-
     // Send the confirmation email
     await sendEmail(
       inquiry.email,
       inquiry.firstName + inquiry.lastName,
-      `Decision on Your Request of ${categoryName} - Ticket Number ${inquiry.inquiryNumber}!`,
+      replaceSubject,
       `Dear ${inquiry.firstName} ${inquiry.lastName}`,
       replacedEmailTemplate
     );
@@ -730,6 +708,22 @@ const rejectInquiry = async (req, res) => {
     res.status(500).json({ message: "Error rejecting inquiry", error });
   }
 };
+
+const closeInquiry = async (req, res) => {
+  const id = req.params.id;
+  try {
+    const updatingInquiry = await Inquiry.findById(id);
+    if (!updatingInquiry) {
+      return res.status(400).json({ message: "Not found Inquiry" })
+    }
+
+    updatingInquiry.status = 7;
+    await updatingInquiry.save();
+    return res.status(200).json({ message: "Successfully closed", data: updatingInquiry })
+  } catch (error) {
+    res.status(500).json({ message: "Error closing inquiry", error });
+  }
+}
 
 const reOpenTicket = async (req, res) => {
   const { ticket_id, reason } = req.body;
@@ -752,9 +746,9 @@ const reOpenTicket = async (req, res) => {
 };
 
 const sendPassEmail = async (req, res) => {
-  const { selectedOptions, selectedTicket } = req.body;
+  const { selectedMail, personalMsg, selectedTicket } = req.body;
   let emailContent =
-    "<p>Full Name: " +
+    "<p>Student Name: " +
     selectedTicket?.firstName +
     " " +
     selectedTicket?.lastName +
@@ -763,23 +757,28 @@ const sendPassEmail = async (req, res) => {
     selectedTicket?.enrollmentNumber +
     "</p><br />";
 
+  if (personalMsg) {
+    emailContent = emailContent + "<hr/>" + "<p>" + personalMsg + "</p>"
+  }
+
   Object.entries(selectedTicket?.details).forEach(([key, value]) => {
     emailContent =
-      emailContent + "<p>" + key + ":" + "<span>" + value + "</span>" + "</p>";
+      emailContent + "<hr/><p>Ticket Information</p>" + "<p>" + formatWord(key) + ":" + "<span>" + value + "</span>" + "</p>";
   });
 
   try {
-    const results = await Promise.all(
-      selectedOptions.map(async (option) => {
-        // Send the confirmation email
-        await sendEmail(
-          option?.value,
-          selectedTicket?.firstName + selectedTicket?.lastName,
-          "Inquiry Information for Pass To Another Department",
-          "Inquiry Information for Pass To Another Department",
-          emailContent
-        );
-      })
+    let attachment = "";
+    if (selectedTicket?.documents[0]) {
+      attachment = selectedTicket?.documents[0].url;
+    }
+
+    await sendEmail(
+      selectedMail,
+      selectedTicket?.firstName + " " + selectedTicket?.lastName,
+      "Inquiry Information for Pass To Another Department",
+      "Inquiry Information for Pass To Another Department",
+      emailContent,
+      attachment
     );
     res.json({ message: "Email was sent" });
   } catch (error) {
@@ -842,6 +841,117 @@ const resetPasswordToDefault = async (req, res) => {
   }
 };
 
+const internalNote = async (req, res) => {
+  const { selectedTicket, mailContent } = req.body;
+  if (!selectedTicket || !selectedTicket._id) {
+    return res.status(400).json({ message: "Select Ticket is required" });
+  }
+  if (!mailContent) {
+    return res.status(400).json({ message: "Mail content is required" })
+  }
+
+  try {
+    const newAdditionalMessage = new AdditionalMessage({
+      inquiry: selectedTicket._id,
+      user: req.user.id,
+      content: mailContent
+    });
+    await newAdditionalMessage.save();
+    return res.status(200).json({ data: newAdditionalMessage, message: "Successfully created new internal note" })
+  } catch (error) {
+    console.log(error, 'create internal note')
+    return res.status(400).json({ message: "Error occured on creating internal note" })
+  }
+
+}
+
+const replyStudent = async (req, res) => {
+  const { selectedTicket, mailContent } = req.body;
+  if (!selectedTicket) {
+    return res.status(400).json({ message: "Select Ticket is required" });
+  }
+  if (!mailContent) {
+    return res.status(400).json({ message: "Mail content is required" })
+  }
+
+  try {
+    const newAdditionalMessage = new AdditionalMessage({
+      inquiry: selectedTicket._id,
+      user: req.user.id,
+      content: mailContent,
+      state: "replyStudent"
+    });
+    await newAdditionalMessage.save();
+
+    // send mail to student
+    await sendEmail(
+      selectedTicket.email,
+      selectedTicket?.firstName + " " + selectedTicket?.lastName,
+      "Reply to student about the ticket",
+      "Reply to student about the ticket",
+      mailContent
+    );
+
+    return res.status(200).json({ data: newAdditionalMessage, message: "Successfully reply to studnet" })
+  } catch (error) {
+    console.log(error, "Error occured on reply student");
+    return res.status(400).json({ message: "Error occured on reply to student" })
+  }
+}
+
+const getInternalNote = async (req, res) => {
+  const userRole = req.user.role;
+  if (userRole === 2) {
+    return res.status(400).json({ message: "Error occured: you are not admin" })
+  }
+  try {
+    const internalNoteList = await AdditionalMessage
+      .find({ state: "internalNote" })
+      .populate("inquiry", ["_id", "inquiryNumber"])
+      .populate("user", ["_id", "firstName", "lastName", "position"]);
+    return res.status(200).json({ data: internalNoteList, message: "Successfully fetched internal notes" })
+  } catch (error) {
+    console.log(error, "Error occured on fetching internal notes");
+    return res.status(400).json({ message: "Error occured on fetching internal notes" });
+  }
+}
+
+const getReplyStudentMessageList = async (req, res) => {
+  try {
+    const replyStudentMessageList = await AdditionalMessage
+      .find({ state: "replyStudent" })
+      .populate("inquiry", ["_id", "inquiryNumber"])
+      .populate("user", ["_id", "firstName", "lastName", "position"]);
+
+    return res.status(200).json({ data: replyStudentMessageList, message: "Successfully fetched reply messages" })
+  } catch (error) {
+    console.log(error, "Error occured on fetching reply messages");
+    return res.status(400).json({ message: "Error occured on fetching reply messages" })
+  }
+}
+
+const getReplyStudentMessage = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "Not found user" })
+    }
+
+    const replyStudentMessageList = await AdditionalMessage
+      .find({ state: "replyStudent" })
+      .populate({
+        path: "inquiry",
+        select: ["_id", "inquiryNumber", "enrollmentNumber"],
+        match: { enrollmentNumber: user.enrollmentNumber }
+      })
+      .populate("user", ["_id", "firstName", "lastName", "position"]);
+    return res.status(200).json({ data: replyStudentMessageList, message: "Successfully fetched reply message" })
+  } catch (error) {
+    console.log(error, "Error occured on fetching reply message for student");
+    return res.status(400).json({ message: "Error occured on fetching reply message for student" })
+  }
+}
+
 module.exports = {
   createRole,
   editRole,
@@ -861,5 +971,11 @@ module.exports = {
   sendPassEmail,
   deleteUser,
   resetPasswordToDefault,
-  acceptTransferTarguMuresInquiry
+  acceptTransferTarguMuresInquiry,
+  closeInquiry,
+  internalNote,
+  replyStudent,
+  getInternalNote,
+  getReplyStudentMessageList,
+  getReplyStudentMessage
 };

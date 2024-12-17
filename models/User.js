@@ -44,12 +44,6 @@ const UserSchema = new mongoose.Schema({
       subCategory1: {
         type: String
       },
-      value: {
-        type: String
-      },
-      label: {
-        type: String
-      },
       permission: {
         type: String,
         enum: ["None", "Passive", "Active", "Responsible"]

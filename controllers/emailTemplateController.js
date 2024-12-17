@@ -6,27 +6,38 @@ const addEmailTemplate = async (req, res) => {
   try {
     const {
       inquiryCategory,
-      subCategory,
-      label,
+      subCategory1,
       emailTemplateTitle,
-      emailTemplateContent
+      emailTemplateContent,
+      emailTemplateState
     } = req.body;
 
-    existingTemplate = await EmailTemplate.findOne({
+    const existingTemplate = await EmailTemplate.findOne({
       emailTemplateTitle: emailTemplateTitle,
+      subCategory1: subCategory1,
       inquiryCategory: inquiryCategory,
-      subCategory: subCategory
+      emailTemplateState: emailTemplateState
     });
     if (existingTemplate) {
       return res.status(400).json({ message: "Template Title already exists" });
     }
 
+    // check student default emailtemplate
+    if (subCategory1 === "student") {
+      const studentEmailTemplate = await EmailTemplate.findOne({
+        subCategory1: subCategory1
+      });
+      if (studentEmailTemplate) {
+        return res.status(400).json({ message: "Template for student already exists" });
+      }
+    }
+
     const newEmailTemplate = new EmailTemplate({
-      inquiryCategory,
-      subCategory,
-      label,
-      emailTemplateTitle,
-      emailTemplateContent
+      inquiryCategory: (inquiryCategory !== "" ? inquiryCategory : "Default"),
+      subCategory1,
+      emailTemplateTitle: (subCategory1 === "student" ? "Student" : emailTemplateTitle),
+      emailTemplateContent,
+      emailTemplateState: (subCategory1 === "student" ? "Student" : emailTemplateState)
     });
 
     await newEmailTemplate.save();
@@ -52,7 +63,7 @@ const getEmailTemplate = async (req, res) => {
 
     return res.status(201).json({
       message: "Email Template exists",
-      emailTemplate: existingTemplate
+      data: existingTemplate
     });
   } catch (error) {
     console.error("Error getting email template:", error);
@@ -62,19 +73,26 @@ const getEmailTemplate = async (req, res) => {
 
 const getEmailTemplatesByCategory = async (req, res) => {
   try {
-    const { inquiryCategory, subCategory } = req.body;
+    const { inquiryCategory, subCategory1, emailTemplateState } = req.body;
 
     const existingTemplates = await EmailTemplate.find({
-      inquiryCategory: inquiryCategory,
-      subCategory: subCategory
+      inquiryCategory,
+      subCategory1,
+      emailTemplateState
     });
-    if (!existingTemplates) {
+
+    const defaultTempates = await EmailTemplate.find({
+      inquiryCategory: "Default",
+      subCategory1: { $ne: "student" }
+    })
+
+    if (!existingTemplates && !defaultTempates) {
       return res.status(400).json({ message: "Template Title no exists" });
     }
 
     return res.status(201).json({
       message: "Email Template exists",
-      emailTemplates: existingTemplates
+      data: existingTemplates?.length > 0 ? existingTemplates : existingTemplates.concat(defaultTempates)
     });
   } catch (error) {
     console.error("Error getting email template:", error);
