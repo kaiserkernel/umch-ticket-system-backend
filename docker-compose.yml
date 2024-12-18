@@ -7,7 +7,7 @@ services:
     ports:
       - "5000:5000" # Map container port 3000 to host port 3000
     volumes:
-      - .:/usr/src/app # Mount the current directory for live code updates
+      - ./ssl:/app/ssl  # Mount SSL files
       - /usr/src/app/node_modules # Avoid overwriting node_modules
     env_file:
       - .env # Load environment variables from .env file
