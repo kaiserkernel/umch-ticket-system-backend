@@ -29,8 +29,8 @@ const corsOptions = {
 
 // Load your SSL certificate and key
 const options = {
-  key: fs.readFileSync('/app/ssl/private.key'), // replace with your actual path
-  cert: fs.readFileSync('/app/ssl/certificate.crt') // replace with your actual path
+  key: fs.readFileSync('./ssl/private.key'),
+  cert: fs.readFileSync('./ssl/certificate.crt')
 };
 
 // Initialize Firebase Admin
