@@ -10,24 +10,16 @@ COPY package*.json ./
 # Install backend dependencies
 RUN npm install
 
-# Copy the entire project (backend)
+# Copy the entire backend project
 COPY . .
 
 # Copy SSL files into the container
 COPY ./ssl /app/ssl
 
-# If the React build is located in a separate frontend folder, build it
-# Copy React frontend source code (assuming it's inside a "frontend" directory)
+# Copy already built React frontend into the backend build directory
+COPY ./build /usr/src/app/build
 
-# Build the React frontend
-WORKDIR /usr/src/app/frontend
-RUN npm install && npm run build
-
-# Copy the build folder from React to the public folder in the backend
-WORKDIR /usr/src/app
-COPY ./frontend/build /usr/src/app/build
-
-# Expose the backend port
+# Expose the backend port (5000) and frontend port (3000) if needed for different services
 EXPOSE 5000
 EXPOSE 3000
 
