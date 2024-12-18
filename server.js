@@ -141,6 +141,6 @@ app.get("/", (req, res) => {
 });
 
 // Start HTTPS server
-server.listen(PORT, "5.132.162.20", () => {
+server.listen(PORT, () => {
   console.log(`HTTPS server running on port ${PORT}`);
 });
