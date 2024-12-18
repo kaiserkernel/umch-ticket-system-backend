@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const logger = require("../utils/logger");
-const fetch = require("node-fetch"); // Import node-fetch
+const axios = require("axios");
 
 require("dotenv").config();
 
@@ -139,15 +139,15 @@ exports.login = async (req, res) => {
 };
 
 const verifyRecaptchaToken = async (_recaptchaToken) => {
-  const response = await fetch("https://www.google.com/recaptcha/api/siteverify", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
+  try {
+    const response = await axios.post("https://www.google.com/recaptcha/api/siteverify", new URLSearchParams({
       secret: process.env.SECRET_KEY,
       response: _recaptchaToken,
-    }),
-  });
+    }));
 
-  const data = await response.json();
-  return data;
+    return response.data; // This will contain the result from Google's reCAPTCHA verification
+  } catch (error) {
+    console.error("Error during reCAPTCHA verification:", error);
+    throw new Error("reCAPTCHA verification failed");
+  }
 }
