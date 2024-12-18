@@ -1,18 +1,23 @@
-# Use official Node.js image as base
-FROM node:18
+# Use official Node.js image as the base image
+FROM node:16
 
-# Set working directory inside the container
-WORKDIR /app
+# Set the working directory inside the container
+WORKDIR /usr/src/app
 
-# Copy package.json and install dependencies
-COPY package.json ./
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install backend dependencies
 RUN npm install
 
-# Copy the rest of your app
+# Copy the entire project
 COPY . .
 
-# Expose the port the backend will run on
+# Build the React frontend (optional if the build folder is already present)
+RUN npm run build --prefix ./build
+
+# Expose the backend port
 EXPOSE 5000
 
-# Command to run the backend API
+# Start the backend (Express) server
 CMD ["npm", "start"]
