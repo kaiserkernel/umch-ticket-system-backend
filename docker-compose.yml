@@ -1,0 +1,27 @@
+services:
+  backend:
+    container_name: umch-ticket-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000" # Map container port 3000 to host port 3000
+    volumes:
+      - .:/usr/src/app # Mount the current directory for live code updates
+      - /usr/src/app/node_modules # Avoid overwriting node_modules
+    env_file:
+      - .env # Load environment variables from .env file
+    depends_on:
+      - mongodb # Ensure MongoDB starts before the backend
+    restart: always # Restart container if it crashes
+
+  mongodb:
+    container_name: umch-mongodb
+    image: mongo:6.0 # Use the official MongoDB image
+    ports:
+      - "27017:27017" # Map MongoDB port 27017
+    volumes:
+      - mongodb-data:/data/db # Persist MongoDB data
+
+volumes:
+  mongodb-data: # Define a named volume for MongoDB data persistence
