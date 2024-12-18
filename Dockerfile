@@ -18,7 +18,6 @@ COPY ./ssl /app/ssl
 
 # If the React build is located in a separate frontend folder, build it
 # Copy React frontend source code (assuming it's inside a "frontend" directory)
-COPY ./frontend /usr/src/app/frontend
 
 # Build the React frontend
 WORKDIR /usr/src/app/frontend
@@ -30,6 +29,7 @@ COPY ./frontend/build /usr/src/app/build
 
 # Expose the backend port
 EXPOSE 5000
+EXPOSE 3000
 
 # Start the backend (Express) server
 CMD ["npm", "start"]

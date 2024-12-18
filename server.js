@@ -46,8 +46,8 @@ admin.initializeApp({
 
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions)); // Handle preflight requests
-app.use(express.static(path.resolve("./public")));
-app.use(express.static(path.resolve("./build")));
+app.use(express.static(path.resolve(__dirname, "./public")));
+app.use(express.static(path.resolve(__dirname, "build")));
 app.use(express.json());
 
 app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
@@ -57,6 +57,11 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/emailTemplate", emailTemplateRoutes);
 app.use("/api/ticket-group", ticketGroupRoutes);
+
+// Catch-all route to serve React app's index.html for frontend navigation
+app.get("*", (req, res) => {
+  res.sendFile(path.resolve(__dirname, "build", "index.html"));
+});
 
 setupSwagger(app);
 
