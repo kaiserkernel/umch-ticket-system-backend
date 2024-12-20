@@ -185,7 +185,7 @@ const updateUserProfile = async (req, res) => {
     if (firstName) user.firstName = firstName;
     if (lastName) user.lastName = lastName;
     if (password) user.password = password; // Ideally hash the password before saving
-    if (firstYearOfStudy) user.firstYearOfStudy = firstYearOfStudy;
+    if (firstYearOfStudy && user.role === 2) user.firstYearOfStudy = firstYearOfStudy;
     if (req?.file?.filename) {
       user.avatar = `/uploads/images/avatar/${req.file.filename}`;
     }

@@ -21,9 +21,8 @@ connectDB();
 
 const app = express();
 const corsOptions = {
-  origin: "*", // Specify origin if needed (e.g., 'http://localhost:3000')
+  origin: ["https://ticket-system.umch.de:5000"], // Specify origin if needed (e.g., 'http://localhost:3000')
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "Accept"],
   credentials: true // Use true if sending cookies or auth headers is necessary
 };
 
@@ -45,7 +44,7 @@ admin.initializeApp({
 });
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // Handle preflight requests
+// app.options("*", cors(corsOptions)); // Handle preflight requests
 app.use(express.static(path.resolve(__dirname, "./public")));
 app.use(express.static(path.resolve(__dirname, "build")));
 app.use(express.json());

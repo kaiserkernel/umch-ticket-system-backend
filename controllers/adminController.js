@@ -378,13 +378,15 @@ const acceptInquiry = async (req, res) => {
     inquiry.emailContent = updatedHtmlContent;
     await inquiry.save();
 
+    const contactReopenInfo = `<a href='${process.env.HOST}/#/ticket-reopen/${id}'>Contact Us</a>`;
+
     // Send the confirmation email
     await sendEmail(
       inquiry.email,
       inquiry.firstName + inquiry.lastName,
       replaceSubject,
       `Dear ${inquiry.firstName} ${inquiry.lastName}`,
-      replacedEmailTemplate
+      replacedEmailTemplate.concat(contactReopenInfo)
     );
     const updatedInquiry = await Inquiry.findById(id);
     res.json({
@@ -410,6 +412,8 @@ const acceptEnrollmentInquiry = async (req, res) => {
     let result;
     const inquiry = await Inquiry.findById(id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
+
+    const contactReopenInfo = `<a href='${process.env.HOST}/#/ticket-reopen/${id}'>Contact Us</a>`;
 
     (async () => {
       try {
@@ -440,7 +444,7 @@ const acceptEnrollmentInquiry = async (req, res) => {
           inquiry.firstName + inquiry.lastName,
           `Your Enrollment Certificate -  Ticket Number ${inquiry.inquiryNumber}!`,
           `Dear ${inquiry.firstName} ${inquiry.lastName}`,
-          replacedEmailTemplate,
+          replacedEmailTemplate.concat(contactReopenInfo),
           result
         );
 
@@ -473,6 +477,8 @@ const acceptExamInspection = async (req, res) => {
     const inquiry = await Inquiry.findById(id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
 
+    const contactReopenInfo = `<a href='${process.env.HOST}/#/ticket-reopen/${id}'>Contact Us</a>`;
+
     try {
       inquiry.status = 2;
       inquiry.isClicked = 0;
@@ -493,7 +499,7 @@ const acceptExamInspection = async (req, res) => {
         inquiry.firstName + inquiry.lastName,
         ` Approval for Exam Review – Confirmation Required -  Ticket Number ${inquiry.inquiryNumber}!`,
         `Dear ${inquiry.firstName} ${inquiry.lastName}`,
-        replacedEmailTemplate,
+        replacedEmailTemplate.concat(contactReopenInfo),
         result
       );
 
@@ -525,6 +531,8 @@ const acceptTransferTarguMuresInquiry = async (req, res) => {
     const inquiry = await Inquiry.findById(id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
 
+    const contactReopenInfo = `<a href='${process.env.HOST}/#/ticket-reopen/${id}'>Contact Us</a>`;
+
     (async () => {
       try {
         let documents;
@@ -554,7 +562,7 @@ const acceptTransferTarguMuresInquiry = async (req, res) => {
           inquiry.firstName + inquiry.lastName,
           `Your Enrollment Certificate -  Ticket Number ${inquiry.inquiryNumber}!`,
           `Dear ${inquiry.firstName} ${inquiry.lastName}`,
-          replacedEmailTemplate,
+          replacedEmailTemplate.concat(contactReopenInfo),
           result
         );
 
@@ -676,9 +684,7 @@ const rejectInquiry = async (req, res) => {
     const inquiry = await Inquiry.findById(id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
 
-    const authedUser = await User.findById(req.user.id).select(
-      "email firstName lastName title position category"
-    );
+    const contactReopenInfo = `<a href='${process.env.HOST}/#/ticket-reopen/${id}'>Contact Us</a>`;
 
     inquiry.status = 3;
     inquiry.isClicked = 0;
@@ -697,7 +703,7 @@ const rejectInquiry = async (req, res) => {
       inquiry.firstName + inquiry.lastName,
       replaceSubject,
       `Dear ${inquiry.firstName} ${inquiry.lastName}`,
-      replacedEmailTemplate
+      replacedEmailTemplate.concat(contactReopenInfo)
     );
     const updatedInquiry = await Inquiry.findById(id);
     res.json({
@@ -747,6 +753,12 @@ const reOpenTicket = async (req, res) => {
 
 const sendPassEmail = async (req, res) => {
   const { selectedMail, personalMsg, selectedTicket } = req.body;
+
+  let title = "Inquiry Information for Pass To Another Department";
+  if (req.user.role === 2) {
+    title = "Inquiry Information for Forward Ticket"
+  }
+
   let emailContent =
     "<p>Student Name: " +
     selectedTicket?.firstName +
@@ -775,8 +787,8 @@ const sendPassEmail = async (req, res) => {
     await sendEmail(
       selectedMail,
       selectedTicket?.firstName + " " + selectedTicket?.lastName,
-      "Inquiry Information for Pass To Another Department",
-      "Inquiry Information for Pass To Another Department",
+      title,
+      title,
       emailContent,
       attachment
     );
@@ -866,7 +878,7 @@ const internalNote = async (req, res) => {
 }
 
 const replyStudent = async (req, res) => {
-  const { selectedTicket, mailContent } = req.body;
+  const { selectedTicket, mailContent, documents } = req.body;
   if (!selectedTicket) {
     return res.status(400).json({ message: "Select Ticket is required" });
   }
@@ -874,23 +886,28 @@ const replyStudent = async (req, res) => {
     return res.status(400).json({ message: "Mail content is required" })
   }
 
+  const _selectedTicket = JSON.parse(selectedTicket);
+
   try {
     const newAdditionalMessage = new AdditionalMessage({
-      inquiry: selectedTicket._id,
+      inquiry: _selectedTicket._id,
       user: req.user.id,
       content: mailContent,
-      state: "replyStudent"
+      state: "replyStudent",
+      document: req.files.length > 0 ? { url: `/uploads/documents/${req.files[0].filename}`, filename: req.files[0].originalname } : null
     });
     await newAdditionalMessage.save();
 
     // send mail to student
-    await sendEmail(
-      selectedTicket.email,
-      selectedTicket?.firstName + " " + selectedTicket?.lastName,
-      "Reply to student about the ticket",
-      "Reply to student about the ticket",
-      mailContent
-    );
+    if (req.user.role !== 2) {
+      await sendEmail(
+        _selectedTicket.email,
+        _selectedTicket?.firstName + " " + _selectedTicket?.lastName,
+        "Reply to student about the ticket",
+        "Reply to student about the ticket",
+        mailContent
+      );
+    }
 
     return res.status(200).json({ data: newAdditionalMessage, message: "Successfully reply to studnet" })
   } catch (error) {
@@ -921,7 +938,7 @@ const getReplyStudentMessageList = async (req, res) => {
     const replyStudentMessageList = await AdditionalMessage
       .find({ state: "replyStudent" })
       .populate("inquiry", ["_id", "inquiryNumber"])
-      .populate("user", ["_id", "firstName", "lastName", "position"]);
+      .populate("user", ["_id", "firstName", "lastName", "position", "role"]);
 
     return res.status(200).json({ data: replyStudentMessageList, message: "Successfully fetched reply messages" })
   } catch (error) {
@@ -944,7 +961,7 @@ const getReplyStudentMessage = async (req, res) => {
         select: ["_id", "inquiryNumber", "enrollmentNumber"],
         match: { enrollmentNumber: user.enrollmentNumber }
       })
-      .populate("user", ["_id", "firstName", "lastName", "position"]);
+      .populate("user", ["_id", "firstName", "lastName", "position", "role"]);
     return res.status(200).json({ data: replyStudentMessageList, message: "Successfully fetched reply message" })
   } catch (error) {
     console.log(error, "Error occured on fetching reply message for student");

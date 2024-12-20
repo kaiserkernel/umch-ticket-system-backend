@@ -19,6 +19,14 @@ const AdditionalMessageSchema = new mongoose.Schema({
         type: String,
         default: "internalNote"
     },
+    document: {
+        url: {
+            type: String
+        },
+        filename: {
+            type: String
+        }
+    },
     createdAt: {
         type: Date,
         default: Date.now

@@ -29,6 +29,7 @@ const {
 const checkSuperAdmin = require("../middlewares/checkSuperAdmin");
 const authMiddleware = require("../middlewares/authMiddleware");
 const createRoleValidator = require("../middlewares/createRoleValidator");
+const { uploadDocuments } = require("../middlewares/upload");
 
 const router = express.Router();
 
@@ -306,7 +307,7 @@ router.post(
 
 router.post("/internal-note", authMiddleware, internalNote);
 
-router.post("/reply-student", authMiddleware, replyStudent);
+router.post("/reply-student", authMiddleware, uploadDocuments.array("documents"), replyStudent);
 
 router.get("/internal-note", authMiddleware, getInternalNote);
 
