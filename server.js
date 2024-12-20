@@ -21,7 +21,8 @@ connectDB();
 
 const app = express();
 const corsOptions = {
-  origin: ["https://ticket-system.umch.de:5000", "https://5.132.162.20:5000"], // Specify origin if needed (e.g., 'http://localhost:3000')
+  // origin: ["https://ticket-system.umch.de:5000", "https://5.132.162.20:5000"], // Specify origin if needed (e.g., 'http://localhost:3000')
+  origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   credentials: true // Use true if sending cookies or auth headers is necessary
 };
