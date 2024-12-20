@@ -21,8 +21,7 @@ connectDB();
 
 const app = express();
 const corsOptions = {
-  // origin: ["https://ticket-system.umch.de:5000", "https://5.132.162.20:5000"], // Specify origin if needed (e.g., 'http://localhost:3000')
-  origin: "*",
+  origin: ["https://ticket-system.umch.de:5000", "https://5.132.162.20:5000"], // Specify origin if needed (e.g., 'http://localhost:3000')
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   credentials: true // Use true if sending cookies or auth headers is necessary
 };
@@ -30,7 +29,8 @@ const corsOptions = {
 // Load your SSL certificate and key
 const options = {
   key: fs.readFileSync('./ssl/private.key'),
-  cert: fs.readFileSync('./ssl/certificate.crt')
+  cert: fs.readFileSync('./ssl/certificate.crt'),
+  ca: fs.readFileSync("./ssl/ca_bundle.crt")
 };
 
 // Initialize Firebase Admin
