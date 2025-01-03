@@ -1,6 +1,7 @@
 services:
   backend:
     container_name: umch-ticket-backend
+    hostname: test-ticket-system
     build:
       context: .
       dockerfile: Dockerfile
@@ -15,7 +16,7 @@ services:
     restart: always # Restart container if it crashes
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`ticket-system.umch.de`)" # Add your domain here
+      - "traefik.http.routers.backend.rule=Host(`test-ticket-system.umch.de`)" # Add your domain here
       - "traefik.http.services.backend.loadbalancer.server.port=5000" # Replace "<PORT>" with the port your API is listening to.
       - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
 
