@@ -80,6 +80,7 @@ exports.login = async (req, res) => {
   const { email, password, enrollmentNumber, recaptChatoken } = req.body;
 
   // Validate reCAPTCHA
+  /*
   try {
     const recaptchaResponse = await verifyRecaptchaToken(recaptChatoken);
     if (!recaptchaResponse.success || recaptchaResponse.score < 0.5) {
@@ -97,7 +98,7 @@ exports.login = async (req, res) => {
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
-
+*/
   try {
     const user = await User.findOne(
       email ? { email } : { enrollmentNumber }
