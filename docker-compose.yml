@@ -13,11 +13,12 @@ services:
     depends_on:
       - mongodb # Ensure MongoDB starts before the backend
     restart: always # Restart container if it crashes
-    #labels:
-    #  - "traefik.enable=true"
-    #  - "traefik.http.routers.backend.rule=Host(`ticket-system.umch.de`)" # Add your domain here
-    #  - "traefik.http.services.backend.loadbalancer.server.port=5000" # Replace "<PORT>" with the port your API is listening to.
-    #  - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`ticket-system.umch.de`)" # Add your domain here
+      - "traefik.http.services.backend.loadbalancer.server.port=5000" # Replace "<PORT>" with the port your API is listening to.
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
 
   mongodb:
     container_name: umch-mongodb
@@ -29,3 +30,7 @@ services:
 
 volumes:
   mongodb-data: # Define a named volume for MongoDB data persistence
+
+networks:
+  ticketsystemEx:
+    external: true
