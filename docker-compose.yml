@@ -29,6 +29,8 @@ services:
       - "27017:27017" # Map MongoDB port 27017
     volumes:
       - mongodb-data:/data/db # Persist MongoDB data
+    networks:
+      - ticketsystemEx
 
 volumes:
   mongodb-data: # Define a named volume for MongoDB data persistence
