@@ -19,6 +19,8 @@ services:
       - "traefik.http.services.backend.loadbalancer.server.port=5000" # Replace "<PORT>" with the port your API is listening to.
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+    networks:
+      - ticketsystemEx
 
   mongodb:
     container_name: umch-mongodb
