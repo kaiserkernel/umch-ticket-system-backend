@@ -1,15 +1,4 @@
 services:
-  https-portal:
-    image: steveltn/https-portal:1
-    ports:
-      - "80:80"
-      - "443:443"
-    links:
-      - backend
-    restart: always
-    environment:
-      DOMAINS: "ticket-system.umch.de -> https://ticket-system.umch.de:5000"  
-
   backend:
     container_name: umch-ticket-backend
     build:
