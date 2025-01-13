@@ -19,10 +19,10 @@ COPY ./ssl /app/ssl
 # Copy the already built React frontend into the backend build directory
 COPY ./build /usr/src/app/build
 
-USER node
-
 RUN chown -R node /usr/src/app
 RUN chmod 755 /usr/src/app
+
+USER node
 
 # Expose the backend port (5000) and frontend port (3000) if needed for different services
 EXPOSE 5000
