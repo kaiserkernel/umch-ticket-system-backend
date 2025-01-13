@@ -21,7 +21,7 @@ COPY ./build /usr/src/app/build
 
 USER node
 
-RUN chown -R node:node /usr/src/app
+RUN chown -R node /usr/src/app
 RUN chmod 755 /usr/src/app
 
 # Expose the backend port (5000) and frontend port (3000) if needed for different services
