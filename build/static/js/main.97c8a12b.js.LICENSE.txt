@@ -35,8 +35,8 @@
  */
 
 /*!
- * perfect-scrollbar v1.5.6
- * Copyright 2024 Hyunje Jun, MDBootstrap and Contributors
+ * perfect-scrollbar v1.5.3
+ * Copyright 2021 Hyunje Jun, MDBootstrap and Contributors
  * Licensed under MIT
  */
 
@@ -104,7 +104,7 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 /**
- * @remix-run/router v1.21.0
+ * @remix-run/router v1.20.0
  *
  * Copyright (c) Remix Software Inc.
  *
@@ -115,7 +115,7 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 /**
- * React Router DOM v6.28.0
+ * React Router DOM v6.27.0
  *
  * Copyright (c) Remix Software Inc.
  *
@@ -126,7 +126,7 @@ PERFORMANCE OF THIS SOFTWARE.
  */
 
 /**
- * React Router v6.28.0
+ * React Router v6.27.0
  *
  * Copyright (c) Remix Software Inc.
  *

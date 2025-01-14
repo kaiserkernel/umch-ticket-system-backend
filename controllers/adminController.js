@@ -16,7 +16,7 @@ const inquriyCategoryNames = process.env.INQUIRY_CATEGORIES.split(",");
 
 function formatWord(word) {
   // Add a space before each capital letter
-  const spacedWord = word.replace(/([A-Z])/g, ' $1').trim();
+  const spacedWord = word.replace(/([A-Z])/g, " $1").trim();
   // Capitalize the first letter
   return spacedWord.charAt(0).toUpperCase() + spacedWord.slice(1);
 }
@@ -227,7 +227,9 @@ const getReceivedInquiries = async (req, res) => {
           typeInfo.subCategory1 === log.subCategory1
         );
       });
-      return userPermissionForTicket && userPermissionForTicket.permission !== "None";
+      return (
+        userPermissionForTicket && userPermissionForTicket.permission !== "None"
+      );
     });
 
     if (req.user.email === process.env.SUPER_ADMIN_EMAIL)
@@ -250,7 +252,7 @@ const getInquiriesByEnrollmentNumber = async (req, res) => {
     }
 
     if (!enrollmentNumber) {
-      return res.status(404).json({ message: "Enrollment is required" })
+      return res.status(404).json({ message: "Enrollment is required" });
     }
 
     const inquiries = await Inquiry.find({
@@ -264,7 +266,6 @@ const getInquiriesByEnrollmentNumber = async (req, res) => {
     } else {
       return res.status(200).json(inquiries);
     }
-
   } catch (error) {
     console.error(error);
     return res.status(500).json({
@@ -317,7 +318,9 @@ const getInquiryByID = async (req, res) => {
 // Check an inquiry
 const checkInquiry = async (req, res) => {
   try {
-    const inquiry = await Inquiry.findById(req.params.id).populate("inquiryCategory");
+    const inquiry = await Inquiry.findById(req.params.id).populate(
+      "inquiryCategory"
+    );
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
 
     const authedUser = await User.findById(req.user.id).select(
@@ -329,16 +332,20 @@ const checkInquiry = async (req, res) => {
 
     const emailContent = `
     <h>Dear <strong>${inquiry.firstName} ${inquiry.lastName}</strong></h>
-    <p>Your ticket <strong>${inquiry.inquiryNumber}<strong> on <strong> ${inquiry.inquiryCategory.name}</strong> submitted at <strong>${inquiry.createdAt
-      }</strong> is under checking now.</p>
+    <p>Your ticket <strong>${inquiry.inquiryNumber}<strong> on <strong> ${
+      inquiry.inquiryCategory.name
+    }</strong> submitted at <strong>${
+      inquiry.createdAt
+    }</strong> is under checking now.</p>
     <p>We will get back to you shortly with further updates.
     Wishing you a great day, and we will follow up with more information soon.</p>
     <br />
     <p>Best regards,</p>
     <p>${authedUser.firstName} ${authedUser.lastName}</p>
     <p>${authedUser.title ? authedUser.title : "Professor"}</p>
-    <p>${authedUser.position ? positionNames[authedUser.position] : "Vice Rector"
-      }</p>
+    <p>${
+      authedUser.position ? positionNames[authedUser.position] : "Vice Rector"
+    }</p>
     <p>${authedUser.email}</p>
     `;
 
@@ -459,6 +466,35 @@ const acceptEnrollmentInquiry = async (req, res) => {
       }
     })();
   } catch (error) {
+    res.status(500).json({ message: "Error accepting inquiry", error });
+  }
+};
+
+const previewCredentialPDF = async (req, res) => {
+  const selectedTicket = req.body;
+  const formData = {
+    nationality: selectedTicket?.details?.nationality,
+    currentYearOfStudy: selectedTicket?.details?.currentYearOfStudy
+  };
+  const id = selectedTicket?._id;
+  try {
+    let result;
+    const inquiry = await Inquiry.findById(id);
+    if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
+
+    (async () => {
+      try {
+        result = await convertHtmlToPdf(formData, selectedTicket);
+        res.json({
+          message: "Credential PDF Preview",
+          pdf_url: result
+        });
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    })();
+  } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Error accepting inquiry", error });
   }
 };
@@ -720,16 +756,18 @@ const closeInquiry = async (req, res) => {
   try {
     const updatingInquiry = await Inquiry.findById(id);
     if (!updatingInquiry) {
-      return res.status(400).json({ message: "Not found Inquiry" })
+      return res.status(400).json({ message: "Not found Inquiry" });
     }
 
     updatingInquiry.status = 7;
     await updatingInquiry.save();
-    return res.status(200).json({ message: "Successfully closed", data: updatingInquiry })
+    return res
+      .status(200)
+      .json({ message: "Successfully closed", data: updatingInquiry });
   } catch (error) {
     res.status(500).json({ message: "Error closing inquiry", error });
   }
-}
+};
 
 const reOpenTicket = async (req, res) => {
   const { ticket_id, reason } = req.body;
@@ -756,7 +794,7 @@ const sendPassEmail = async (req, res) => {
 
   let title = "Inquiry Information for Pass To Another Department";
   if (req.user.role === 2) {
-    title = "Inquiry Information for Forward Ticket"
+    title = "Inquiry Information for Forward Ticket";
   }
 
   let emailContent =
@@ -770,12 +808,20 @@ const sendPassEmail = async (req, res) => {
     "</p><br />";
 
   if (personalMsg) {
-    emailContent = emailContent + "<hr/>" + "<p>" + personalMsg + "</p>"
+    emailContent = emailContent + "<hr/>" + "<p>" + personalMsg + "</p>";
   }
 
   Object.entries(selectedTicket?.details).forEach(([key, value]) => {
     emailContent =
-      emailContent + "<hr/><p>Ticket Information</p>" + "<p>" + formatWord(key) + ":" + "<span>" + value + "</span>" + "</p>";
+      emailContent +
+      "<hr/><p>Ticket Information</p>" +
+      "<p>" +
+      formatWord(key) +
+      ":" +
+      "<span>" +
+      value +
+      "</span>" +
+      "</p>";
   });
 
   try {
@@ -859,7 +905,7 @@ const internalNote = async (req, res) => {
     return res.status(400).json({ message: "Select Ticket is required" });
   }
   if (!mailContent) {
-    return res.status(400).json({ message: "Mail content is required" })
+    return res.status(400).json({ message: "Mail content is required" });
   }
 
   try {
@@ -869,13 +915,17 @@ const internalNote = async (req, res) => {
       content: mailContent
     });
     await newAdditionalMessage.save();
-    return res.status(200).json({ data: newAdditionalMessage, message: "Successfully created new internal note" })
+    return res.status(200).json({
+      data: newAdditionalMessage,
+      message: "Successfully created new internal note"
+    });
   } catch (error) {
-    console.log(error, 'create internal note')
-    return res.status(400).json({ message: "Error occured on creating internal note" })
+    console.log(error, "create internal note");
+    return res
+      .status(400)
+      .json({ message: "Error occured on creating internal note" });
   }
-
-}
+};
 
 const replyStudent = async (req, res) => {
   const { selectedTicket, mailContent, documents } = req.body;
@@ -883,7 +933,7 @@ const replyStudent = async (req, res) => {
     return res.status(400).json({ message: "Select Ticket is required" });
   }
   if (!mailContent) {
-    return res.status(400).json({ message: "Mail content is required" })
+    return res.status(400).json({ message: "Mail content is required" });
   }
 
   const _selectedTicket = JSON.parse(selectedTicket);
@@ -894,7 +944,13 @@ const replyStudent = async (req, res) => {
       user: req.user.id,
       content: mailContent,
       state: "replyStudent",
-      document: req.files.length > 0 ? { url: `/uploads/documents/${req.files[0].filename}`, filename: req.files[0].originalname } : null
+      document:
+        req.files.length > 0
+          ? {
+              url: `/uploads/documents/${req.files[0].filename}`,
+              filename: req.files[0].originalname
+            }
+          : null
     });
     await newAdditionalMessage.save();
 
@@ -909,65 +965,90 @@ const replyStudent = async (req, res) => {
       );
     }
 
-    return res.status(200).json({ data: newAdditionalMessage, message: "Successfully reply to studnet" })
+    return res.status(200).json({
+      data: newAdditionalMessage,
+      message: "Successfully reply to studnet"
+    });
   } catch (error) {
     console.log(error, "Error occured on reply student");
-    return res.status(400).json({ message: "Error occured on reply to student" })
+    return res
+      .status(400)
+      .json({ message: "Error occured on reply to student" });
   }
-}
+};
 
 const getInternalNote = async (req, res) => {
   const userRole = req.user.role;
   if (userRole === 2) {
-    return res.status(400).json({ message: "Error occured: you are not admin" })
+    return res
+      .status(400)
+      .json({ message: "Error occured: you are not admin" });
   }
   try {
-    const internalNoteList = await AdditionalMessage
-      .find({ state: "internalNote" })
+    const internalNoteList = await AdditionalMessage.find({
+      state: "internalNote"
+    })
       .populate("inquiry", ["_id", "inquiryNumber"])
       .populate("user", ["_id", "firstName", "lastName", "position"]);
-    return res.status(200).json({ data: internalNoteList, message: "Successfully fetched internal notes" })
+    return res.status(200).json({
+      data: internalNoteList,
+      message: "Successfully fetched internal notes"
+    });
   } catch (error) {
     console.log(error, "Error occured on fetching internal notes");
-    return res.status(400).json({ message: "Error occured on fetching internal notes" });
+    return res
+      .status(400)
+      .json({ message: "Error occured on fetching internal notes" });
   }
-}
+};
 
 const getReplyStudentMessageList = async (req, res) => {
   try {
-    const replyStudentMessageList = await AdditionalMessage
-      .find({ state: "replyStudent" })
+    const replyStudentMessageList = await AdditionalMessage.find({
+      state: "replyStudent"
+    })
       .populate("inquiry", ["_id", "inquiryNumber"])
       .populate("user", ["_id", "firstName", "lastName", "position", "role"]);
 
-    return res.status(200).json({ data: replyStudentMessageList, message: "Successfully fetched reply messages" })
+    return res.status(200).json({
+      data: replyStudentMessageList,
+      message: "Successfully fetched reply messages"
+    });
   } catch (error) {
     console.log(error, "Error occured on fetching reply messages");
-    return res.status(400).json({ message: "Error occured on fetching reply messages" })
+    return res
+      .status(400)
+      .json({ message: "Error occured on fetching reply messages" });
   }
-}
+};
 
 const getReplyStudentMessage = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) {
-      return res.status(404).json({ message: "Not found user" })
+      return res.status(404).json({ message: "Not found user" });
     }
 
-    const replyStudentMessageList = await AdditionalMessage
-      .find({ state: "replyStudent" })
+    const replyStudentMessageList = await AdditionalMessage.find({
+      state: "replyStudent"
+    })
       .populate({
         path: "inquiry",
         select: ["_id", "inquiryNumber", "enrollmentNumber"],
         match: { enrollmentNumber: user.enrollmentNumber }
       })
       .populate("user", ["_id", "firstName", "lastName", "position", "role"]);
-    return res.status(200).json({ data: replyStudentMessageList, message: "Successfully fetched reply message" })
+    return res.status(200).json({
+      data: replyStudentMessageList,
+      message: "Successfully fetched reply message"
+    });
   } catch (error) {
     console.log(error, "Error occured on fetching reply message for student");
-    return res.status(400).json({ message: "Error occured on fetching reply message for student" })
+    return res
+      .status(400)
+      .json({ message: "Error occured on fetching reply message for student" });
   }
-}
+};
 
 module.exports = {
   createRole,
@@ -981,6 +1062,7 @@ module.exports = {
   getInquiriesByEnrollmentNumber,
   reOpenTicket,
   acceptEnrollmentInquiry,
+  previewCredentialPDF,
   acceptExamInspection,
   processTranscriptRecord,
   doneTranscriptRecord,

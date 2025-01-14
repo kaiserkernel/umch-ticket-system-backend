@@ -10,6 +10,7 @@ const {
   acceptInquiry,
   reOpenTicket,
   acceptEnrollmentInquiry,
+  previewCredentialPDF,
   acceptExamInspection,
   processTranscriptRecord,
   doneTranscriptRecord,
@@ -24,7 +25,7 @@ const {
   replyStudent,
   getInternalNote,
   getReplyStudentMessageList,
-  getReplyStudentMessage,
+  getReplyStudentMessage
 } = require("../controllers/adminController");
 const checkSuperAdmin = require("../middlewares/checkSuperAdmin");
 const authMiddleware = require("../middlewares/authMiddleware");
@@ -286,6 +287,12 @@ router.post(
   acceptEnrollmentInquiry
 );
 
+router.post(
+  "/inquiries/enrollment/previewCredentialPDF",
+  authMiddleware,
+  previewCredentialPDF
+);
+
 router.post("/send-pass-email", authMiddleware, sendPassEmail);
 
 router.delete("/delete-user/:id", authMiddleware, deleteUser);
@@ -299,20 +306,21 @@ router.post(
   acceptTransferTarguMuresInquiry
 );
 
-router.post(
-  "/inquiries/close/:id",
-  authMiddleware,
-  closeInquiry
-)
+router.post("/inquiries/close/:id", authMiddleware, closeInquiry);
 
 router.post("/internal-note", authMiddleware, internalNote);
 
-router.post("/reply-student", authMiddleware, uploadDocuments.array("documents"), replyStudent);
+router.post(
+  "/reply-student",
+  authMiddleware,
+  uploadDocuments.array("documents"),
+  replyStudent
+);
 
 router.get("/internal-note", authMiddleware, getInternalNote);
 
-router.get("/reply-student/all", authMiddleware, getReplyStudentMessageList)
+router.get("/reply-student/all", authMiddleware, getReplyStudentMessageList);
 
-router.get("/reply-student", authMiddleware, getReplyStudentMessage)
+router.get("/reply-student", authMiddleware, getReplyStudentMessage);
 
 module.exports = router;
