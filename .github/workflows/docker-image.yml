@@ -14,5 +14,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Build the Docker network
+      run: docker network create -d bridge ticketsystemEx
     - name: Build the Docker image
       run: docker compose up -d
