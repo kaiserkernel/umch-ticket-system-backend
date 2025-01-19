@@ -332,20 +332,17 @@ const checkInquiry = async (req, res) => {
 
     const emailContent = `
     <h>Dear <strong>${inquiry.firstName} ${inquiry.lastName}</strong></h>
-    <p>Your ticket <strong>${inquiry.inquiryNumber}<strong> on <strong> ${
-      inquiry.inquiryCategory.name
-    }</strong> submitted at <strong>${
-      inquiry.createdAt
-    }</strong> is under checking now.</p>
+    <p>Your ticket <strong>${inquiry.inquiryNumber}<strong> on <strong> ${inquiry.inquiryCategory.name
+      }</strong> submitted at <strong>${inquiry.createdAt
+      }</strong> is under checking now.</p>
     <p>We will get back to you shortly with further updates.
     Wishing you a great day, and we will follow up with more information soon.</p>
     <br />
     <p>Best regards,</p>
     <p>${authedUser.firstName} ${authedUser.lastName}</p>
     <p>${authedUser.title ? authedUser.title : "Professor"}</p>
-    <p>${
-      authedUser.position ? positionNames[authedUser.position] : "Vice Rector"
-    }</p>
+    <p>${authedUser.position ? positionNames[authedUser.position] : "Vice Rector"
+      }</p>
     <p>${authedUser.email}</p>
     `;
 
@@ -385,7 +382,7 @@ const acceptInquiry = async (req, res) => {
     inquiry.emailContent = updatedHtmlContent;
     await inquiry.save();
 
-    const contactReopenInfo = `<a href='${process.env.HOST}/#/ticket-reopen/${id}'>Contact Us</a>`;
+    // const contactReopenInfo = `<a href='${process.env.HOST}/#/ticket-reopen/${id}'>Contact Us</a>`;
 
     // Send the confirmation email
     await sendEmail(
@@ -393,7 +390,8 @@ const acceptInquiry = async (req, res) => {
       inquiry.firstName + inquiry.lastName,
       replaceSubject,
       `Dear ${inquiry.firstName} ${inquiry.lastName}`,
-      replacedEmailTemplate.concat(contactReopenInfo)
+      // replacedEmailTemplate.concat(contactReopenInfo)
+      replacedEmailTemplate
     );
     const updatedInquiry = await Inquiry.findById(id);
     res.json({
@@ -420,7 +418,7 @@ const acceptEnrollmentInquiry = async (req, res) => {
     const inquiry = await Inquiry.findById(id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
 
-    const contactReopenInfo = `<a href='${process.env.HOST}/#/ticket-reopen/${id}'>Contact Us</a>`;
+    // const contactReopenInfo = `<a href='${process.env.HOST}/#/ticket-reopen/${id}'>Contact Us</a>`;
 
     (async () => {
       try {
@@ -451,7 +449,8 @@ const acceptEnrollmentInquiry = async (req, res) => {
           inquiry.firstName + inquiry.lastName,
           `Your Enrollment Certificate -  Ticket Number ${inquiry.inquiryNumber}!`,
           `Dear ${inquiry.firstName} ${inquiry.lastName}`,
-          replacedEmailTemplate.concat(contactReopenInfo),
+          // replacedEmailTemplate.concat(contactReopenInfo),
+          replacedEmailTemplate,
           result
         );
 
@@ -513,7 +512,7 @@ const acceptExamInspection = async (req, res) => {
     const inquiry = await Inquiry.findById(id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
 
-    const contactReopenInfo = `<a href='${process.env.HOST}/#/ticket-reopen/${id}'>Contact Us</a>`;
+    // const contactReopenInfo = `<a href='${process.env.HOST}/#/ticket-reopen/${id}'>Contact Us</a>`;
 
     try {
       inquiry.status = 2;
@@ -535,7 +534,8 @@ const acceptExamInspection = async (req, res) => {
         inquiry.firstName + inquiry.lastName,
         ` Approval for Exam Review – Confirmation Required -  Ticket Number ${inquiry.inquiryNumber}!`,
         `Dear ${inquiry.firstName} ${inquiry.lastName}`,
-        replacedEmailTemplate.concat(contactReopenInfo),
+        // replacedEmailTemplate.concat(contactReopenInfo),
+        replacedEmailTemplate,
         result
       );
 
@@ -567,7 +567,7 @@ const acceptTransferTarguMuresInquiry = async (req, res) => {
     const inquiry = await Inquiry.findById(id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
 
-    const contactReopenInfo = `<a href='${process.env.HOST}/#/ticket-reopen/${id}'>Contact Us</a>`;
+    // const contactReopenInfo = `<a href='${process.env.HOST}/#/ticket-reopen/${id}'>Contact Us</a>`;
 
     (async () => {
       try {
@@ -598,7 +598,8 @@ const acceptTransferTarguMuresInquiry = async (req, res) => {
           inquiry.firstName + inquiry.lastName,
           `Your Enrollment Certificate -  Ticket Number ${inquiry.inquiryNumber}!`,
           `Dear ${inquiry.firstName} ${inquiry.lastName}`,
-          replacedEmailTemplate.concat(contactReopenInfo),
+          // replacedEmailTemplate.concat(contactReopenInfo),
+          replacedEmailTemplate,
           result
         );
 
@@ -720,7 +721,7 @@ const rejectInquiry = async (req, res) => {
     const inquiry = await Inquiry.findById(id);
     if (!inquiry) return res.status(404).json({ message: "Inquiry not found" });
 
-    const contactReopenInfo = `<a href='${process.env.HOST}/#/ticket-reopen/${id}'>Contact Us</a>`;
+    // const contactReopenInfo = `<a href='${process.env.HOST}/#/ticket-reopen/${id}'>Contact Us</a>`;
 
     inquiry.status = 3;
     inquiry.isClicked = 0;
@@ -739,7 +740,8 @@ const rejectInquiry = async (req, res) => {
       inquiry.firstName + inquiry.lastName,
       replaceSubject,
       `Dear ${inquiry.firstName} ${inquiry.lastName}`,
-      replacedEmailTemplate.concat(contactReopenInfo)
+      // replacedEmailTemplate.concat(contactReopenInfo)
+      replacedEmailTemplate
     );
     const updatedInquiry = await Inquiry.findById(id);
     res.json({
@@ -752,12 +754,23 @@ const rejectInquiry = async (req, res) => {
 };
 
 const closeInquiry = async (req, res) => {
-  const id = req.params.id;
+  console.log("closing ticket")
+  const { replaceSubject, replacedEmailTemplate, id } = req.body;
   try {
     const updatingInquiry = await Inquiry.findById(id);
     if (!updatingInquiry) {
       return res.status(400).json({ message: "Not found Inquiry" });
     }
+    const contactReopenInfo = `<a href='${process.env.HOST}/#/ticket-reopen/${id}'>Reopen ticket</a>`;
+
+    // Send the confirmation email
+    await sendEmail(
+      updatingInquiry.email,
+      updatingInquiry.firstName + updatingInquiry.lastName,
+      replaceSubject,
+      `Dear ${updatingInquiry.firstName} ${updatingInquiry.lastName}`,
+      replacedEmailTemplate.concat(contactReopenInfo)
+    );
 
     updatingInquiry.status = 7;
     await updatingInquiry.save();
@@ -947,9 +960,9 @@ const replyStudent = async (req, res) => {
       document:
         req.files.length > 0
           ? {
-              url: `/uploads/documents/${req.files[0].filename}`,
-              filename: req.files[0].originalname
-            }
+            url: `/uploads/documents/${req.files[0].filename}`,
+            filename: req.files[0].originalname
+          }
           : null
     });
     await newAdditionalMessage.save();

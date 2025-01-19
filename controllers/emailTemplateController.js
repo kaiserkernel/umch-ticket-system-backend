@@ -75,11 +75,17 @@ const getEmailTemplatesByCategory = async (req, res) => {
   try {
     const { inquiryCategory, subCategory1, emailTemplateState } = req.body;
 
-    const existingTemplates = await EmailTemplate.find({
+    const query = {
       inquiryCategory,
       subCategory1,
-      emailTemplateState
-    });
+    };
+
+    if (emailTemplateState !== undefined) {
+      query.emailTemplateState = emailTemplateState;
+    }
+
+    const existingTemplates = await EmailTemplate.find(query);
+
 
     const defaultTempates = await EmailTemplate.find({
       inquiryCategory: "Default",

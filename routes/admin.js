@@ -306,7 +306,7 @@ router.post(
   acceptTransferTarguMuresInquiry
 );
 
-router.post("/inquiries/close/:id", authMiddleware, closeInquiry);
+router.post("/inquiries/close", authMiddleware, closeInquiry);
 
 router.post("/internal-note", authMiddleware, internalNote);
 
