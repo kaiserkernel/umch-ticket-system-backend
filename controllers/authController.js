@@ -24,9 +24,9 @@ exports.register = async (req, res) => {
   // validation recaptcha
   const data = await verifyRecaptchaToken(recaptChatoken);
 
-  // if (!data.success || data.score < 0.5) {
-  //   return res.status(403).json({ success: false, error: "reCAPTCHA verification failed." });
-  // }
+  if (!data.success || data.score < 0.5) {
+    return res.status(403).json({ success: false, error: "reCAPTCHA verification failed." });
+  }
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
