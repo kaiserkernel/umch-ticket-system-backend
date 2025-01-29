@@ -70,7 +70,6 @@ async function convertHtmlToPdf(formData, selectedTicket) {
 
   let content = "";
   try {
-    console.log(detail, 'detail')
     content = htmlContent
       .replace(
         "[fullname]",

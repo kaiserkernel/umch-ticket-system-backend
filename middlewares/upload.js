@@ -68,9 +68,9 @@ const detectAndTranslate = async (text, targetLang = "en") => {
       text: text.substring(0, 100), // Trim text for faster detection
       target_lang: "EN" // Target language for translation
     });
-    console.log(params, 'params');
+
     const response = await axios.post(apiUrl, params);
-    console.log(response, 'response')
+
     if (response.data.translations[0].detected_source_language !== "EN") {
       const translateParams = new URLSearchParams({
         auth_key: apiKey,
@@ -80,8 +80,6 @@ const detectAndTranslate = async (text, targetLang = "en") => {
 
       const translateResponse = await axios.post(apiUrl, translateParams);
       const translatedText = translateResponse.data.translations[0].text;
-
-      console.log(`Translated Text: ${translatedText}`);
 
       return {
         text: translatedText,
