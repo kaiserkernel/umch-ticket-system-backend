@@ -21,9 +21,10 @@ connectDB();
 
 const app = express();
 const corsOptions = {
-  origin: ["https://ticket-system.umch.de:5000", "https://5.132.162.20:5000", "http://ticket-system.umch.de:3000", "http://5.132.162.20:3000"], // Specify origin if needed (e.g., 'http://localhost:3000')
+  // origin: ["https://ticket-system.umch.de:5000", "https://5.132.162.20:5000", "http://ticket-system.umch.de:3000", "http://5.132.162.20:3000"], // Specify origin if needed (e.g., 'http://localhost:3000')
+  origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  credentials: true // Use true if sending cookies or auth headers is necessary
+  allowedHeaders: ["Content-Type", "Authorization"]
 };
 
 // Load your SSL certificate and key
@@ -136,9 +137,9 @@ async function getUserToken(userId) {
   return "user-fcm-token";
 }
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "build", "index.html"));
-});
+// app.get("/", (req, res) => {
+//   res.sendFile(path.join(__dirname, "build", "index.html"));
+// });
 
 // Start HTTPS server
 server.listen(PORT, () => {
