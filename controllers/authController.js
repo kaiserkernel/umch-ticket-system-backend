@@ -109,7 +109,7 @@ exports.login = async (req, res) => {
         return res.status(401).json({ message: "Invalid enrollment number" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials" });
 
@@ -118,7 +118,7 @@ exports.login = async (req, res) => {
     }
     const payload = { id: user._id, email: user.email, role: user.role };
 
-    const token = await jwt.sign(payload, secret, { expiresIn: "1d" });
+    const token = jwt.sign(payload, secret, { expiresIn: "1d" });
 
     if (!token) return res.status(500).json({ error: "Error signing token" });
 
