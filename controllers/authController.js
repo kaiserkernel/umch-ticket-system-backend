@@ -25,6 +25,7 @@ exports.register = async (req, res) => {
   // Validate reCAPTCHA
   try {
     const recaptchaResponse = await verifyRecaptchaToken(recaptChatoken);
+    console.log(recaptchaResponse, 'register recaptcha response')
     if (!recaptchaResponse.success || recaptchaResponse.score < 0.5) {
       return res.status(403).json({
         success: false,
