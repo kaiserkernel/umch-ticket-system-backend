@@ -4,7 +4,8 @@ const {
   getInquiriesByEnrollmentNumber,
   updateUserProfile,
   resetPassword,
-  adminResetPassword
+  adminResetPassword,
+  getServerTime
 } = require("../controllers/userController");
 const { uploadDocuments } = require("../middlewares/upload");
 const { uploadAvatar } = require("../middlewares/upload");
