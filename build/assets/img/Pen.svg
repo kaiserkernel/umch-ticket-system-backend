@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Ebene_2" data-name="Ebene 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 29.56 29.14">
+  <defs>
+    <style>
+      .cls-1, .cls-2, .cls-3 {
+        fill: none;
+      }
+
+      .cls-2 {
+        stroke-linecap: round;
+      }
+
+      .cls-2, .cls-3 {
+        stroke: #ffea43;
+        stroke-width: 2px;
+      }
+
+      .cls-4 {
+        clip-path: url(#clippath);
+      }
+    </style>
+    <clipPath id="clippath">
+      <rect class="cls-1" width="29.56" height="29.14"/>
+    </clipPath>
+  </defs>
+  <g id="Ebene_2-2" data-name="Ebene 2">
+    <g class="cls-4">
+      <path class="cls-2" d="M12.16,5.82H2.28c-.71,0-1.28.58-1.28,1.28v19.75c0,.71.58,1.28,1.28,1.28h19.75c.71,0,1.28-.57,1.28-1.28v-10.32"/>
+      <rect class="cls-3" x="8.35" y="7.14" width="20.96" height="7.18" rx=".54" ry=".54" transform="translate(-2.07 16.46) rotate(-45)"/>
+    </g>
+    <line class="cls-2" x1="8.88" y1="15.55" x2="7.49" y2="22.15"/>
+    <line class="cls-2" x1="14" y1="20.67" x2="7.67" y2="22.33"/>
+    <line class="cls-3" x1="21.1" y1="3.83" x2="25.92" y2="8.64"/>
+  </g>
+</svg>
