@@ -27,6 +27,7 @@ async function submitInquiry(req, res) {
     } = req.body;
 
     const documents = [];
+    console.log(req.file, "request files")
     for (const file of req.files) {
       const originalFilePath = path.join(
         __dirname,
