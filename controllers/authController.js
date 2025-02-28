@@ -119,9 +119,6 @@ exports.login = async (req, res) => {
     const payload = { id: user._id, email: user.email, role: user.role };
 
     const token = jwt.sign(payload, secret, { expiresIn: "1d" });
-    const decoded = jwt.verify(token, secret);
-    console.log(decoded.exp, 'Token Expiration');
-    console.log(Date.now() / 1000, 'Current Server Time');
 
     if (!token) return res.status(500).json({ error: "Error signing token" });
 
