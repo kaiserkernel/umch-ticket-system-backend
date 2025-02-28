@@ -21,12 +21,19 @@ exports.register = async (req, res) => {
     recaptChatoken
   } = req.body;
 
-  // validation recaptcha
-  const data = await verifyRecaptchaToken(recaptChatoken);
 
-  // if (!data.success || data.score < 0.5) {
-  //   return res.status(403).json({ success: false, error: "reCAPTCHA verification failed." });
-  // }
+  // Validate reCAPTCHA
+  try {
+    const recaptchaResponse = await verifyRecaptchaToken(recaptChatoken);
+    if (!recaptchaResponse.success || recaptchaResponse.score < 0.5) {
+      return res.status(403).json({
+        success: false,
+        errors: "ReCAPTCHA verification failed. Please try again.",
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({ message: "Error verifying reCAPTCHA." });
+  }
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -80,17 +87,17 @@ exports.login = async (req, res) => {
   const { email, password, enrollmentNumber, recaptChatoken } = req.body;
 
   // Validate reCAPTCHA
-  // try {
-  //   const recaptchaResponse = await verifyRecaptchaToken(recaptChatoken);
-  //   if (!recaptchaResponse.success || recaptchaResponse.score < 0.5) {
-  //     return res.status(403).json({
-  //       success: false,
-  //       errors: "ReCAPTCHA verification failed. Please try again.",
-  //     });
-  //   }
-  // } catch (error) {
-  //   return res.status(500).json({ message: "Error verifying reCAPTCHA." });
-  // }
+  try {
+    const recaptchaResponse = await verifyRecaptchaToken(recaptChatoken);
+    if (!recaptchaResponse.success || recaptchaResponse.score < 0.5) {
+      return res.status(403).json({
+        success: false,
+        errors: "ReCAPTCHA verification failed. Please try again.",
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({ message: "Error verifying reCAPTCHA." });
+  }
 
   // Validate request body
   const errors = validationResult(req);
