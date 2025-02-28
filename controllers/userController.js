@@ -332,10 +332,15 @@ const adminResetPassword = async (req, res) => {
   }
 };
 
+const getServerTime = async (req, res) => {
+  return Date.now() / 1000;
+}
+
 module.exports = {
   submitInquiry,
   getInquiriesByEnrollmentNumber,
   updateUserProfile,
   resetPassword,
-  adminResetPassword
+  adminResetPassword,
+  getServerTime
 };

@@ -94,5 +94,6 @@ router.post(
 );
 router.post("/reset-password", resetPassword);
 router.post("/admin-reset-password", adminResetPassword);
+router.get("/time", getServerTime)
 
 module.exports = router;
