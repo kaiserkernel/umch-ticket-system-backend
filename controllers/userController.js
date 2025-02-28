@@ -35,12 +35,14 @@ async function submitInquiry(req, res) {
 
       // Process file for language detection and translation
       const extname = path.extname(file.originalname).toLowerCase();
+      console.log(extname, 'ext name')
       if (
         [".pdf", ".docx", ".txt", ".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"].includes(
           extname
         )
       ) {
         const textContent = await extractTextFromFile(originalFilePath, extname);
+        console.log(textContent, 'text content')
         const { text: translatedText, from } = await detectAndTranslate(
           textContent
         );
