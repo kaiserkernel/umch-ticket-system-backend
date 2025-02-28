@@ -153,7 +153,7 @@ exports.login = async (req, res) => {
 };
 
 const verifyRecaptchaToken = async (_recaptchaToken) => {
-  console.log(_recaptchaToken, 'recaptcha token verify')
+
   try {
     const response = await axios.post("https://www.google.com/recaptcha/api/siteverify", new URLSearchParams({
       secret: process.env.SECRET_KEY,
