@@ -21,7 +21,7 @@ exports.register = async (req, res) => {
     recaptChatoken
   } = req.body;
 
-
+  console.log(recaptChatoken, 'register recaptcha token')
   // Validate reCAPTCHA
   try {
     const recaptchaResponse = await verifyRecaptchaToken(recaptChatoken);
