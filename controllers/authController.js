@@ -85,19 +85,19 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   const { email, password, enrollmentNumber, recaptChatoken } = req.body;
-
+console.log(email, 'email')
   // Validate reCAPTCHA
-  try {
-    const recaptchaResponse = await verifyRecaptchaToken(recaptChatoken);
-    if (!recaptchaResponse.success || recaptchaResponse.score < 0.5) {
-      return res.status(403).json({
-        success: false,
-        errors: "ReCAPTCHA verification failed. Please try again.",
-      });
-    }
-  } catch (error) {
-    return res.status(500).json({ message: "Error verifying reCAPTCHA." });
-  }
+  // try {
+  //   const recaptchaResponse = await verifyRecaptchaToken(recaptChatoken);
+  //   if (!recaptchaResponse.success || recaptchaResponse.score < 0.5) {
+  //     return res.status(403).json({
+  //       success: false,
+  //       errors: "ReCAPTCHA verification failed. Please try again.",
+  //     });
+  //   }
+  // } catch (error) {
+  //   return res.status(500).json({ message: "Error verifying reCAPTCHA." });
+  // }
 
   // Validate request body
   const errors = validationResult(req);
