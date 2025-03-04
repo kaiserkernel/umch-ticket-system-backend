@@ -1,65 +1,52 @@
 const express = require("express");
 const fs = require("fs");
-const https = require('https');
+const https = require("https");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const connectDB = require("./config/db");
-const authRoutes = require("./routes/auth");
-const formRoutes = require("./routes/form");
-const adminRoutes = require("./routes/admin");
-const userRoutes = require("./routes/user");
-const emailTemplateRoutes = require("./routes/emailTemplate");
-const ticketGroupRoutes = require("./routes/ticketGroup");
-
 const path = require("path");
-const setupSwagger = require("./swagger/swagger");
 const socketIo = require("socket.io");
 const admin = require("firebase-admin");
+const connectDB = require("./config/db");
+const setupSwagger = require("./swagger/swagger");
+const routes = require("./routes");
 
 dotenv.config();
 connectDB();
 
 const app = express();
+
+// CORS Configuration
 const corsOptions = {
-  origin: ["https://ticket-system.umch.de:5000", "https://5.132.162.20:5000", "http://ticket-system.umch.de:3000", "http://5.132.162.20:3000"], // Specify origin if needed (e.g., 'http://localhost:3000')
-  // origin: "*",
+  origin: [
+    "https://ticket-system.umch.de:5000",
+    "https://5.132.162.20:5000",
+    "http://ticket-system.umch.de:3000",
+    "http://5.132.162.20:3000"
+  ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 };
 
-// Load your SSL certificate and key
-const options = {
-  key: fs.readFileSync('./ssl/private.key'),
-  cert: fs.readFileSync('./ssl/certificate.crt'),
+// Load SSL Certificates
+const sslOptions = {
+  key: fs.readFileSync("./ssl/private.key"),
+  cert: fs.readFileSync("./ssl/certificate.crt"),
   ca: fs.readFileSync("./ssl/ca_bundle.crt")
 };
 
 // Initialize Firebase Admin
-const serviceAccount = require(path.join(
-  __dirname,
-  "config",
-  "firebase-admin-sdk.json"
-));
+const serviceAccount = require("./config/firebase-admin-sdk.json");
+admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
-
+// Middleware
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // Handle preflight requests
+app.use(express.json());
 app.use(express.static(path.resolve(__dirname, "./public")));
 app.use(express.static(path.resolve(__dirname, "build")));
-app.use(express.json());
-
 app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
-app.use("/api/auth", authRoutes);
-app.use("/api/form", formRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/user", userRoutes);
-app.use("/api/emailTemplate", emailTemplateRoutes);
-app.use("/api/ticket-group", ticketGroupRoutes);
 
-// Catch-all route to serve React app's index.html for frontend navigation
+// Routes
+app.use("/api", routes);
 app.get("*", (req, res) => {
   res.sendFile(path.resolve(__dirname, "build", "index.html"));
 });
@@ -67,63 +54,45 @@ app.get("*", (req, res) => {
 setupSwagger(app);
 
 const PORT = process.env.PORT || 443;
-
-// Store connected clients
-let connectedUsers = {};
-
-// 1. Socket.IO Setup with HTTPS server
-const server = https.createServer(options, app); // create an HTTPS server
+const server = https.createServer(sslOptions, app);
 const io = socketIo(server);
 
-io.on("connection", (socket) => {
-  console.log("New client connected:", socket.id);
+// Store connected users
+const connectedUsers = {};
 
-  // Listen for a user joining with their ID
+// Socket.IO Configuration
+io.on("connection", (socket) => {
+  console.log("Client connected:", socket.id);
+
   socket.on("user-join", (userId) => {
     connectedUsers[userId] = socket.id;
   });
 
-  // Listen for a new message
-  socket.on("send-message", async (data) => {
-    const { senderId, receiverId, message } = data;
-
-    // Emit the message to the receiver if they are online
+  socket.on("send-message", async ({ senderId, receiverId, message }) => {
     const receiverSocketId = connectedUsers[receiverId];
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("receive-message", { senderId, message });
     } else {
-      // Send push notification if the user is offline
       await sendPushNotification(receiverId, message);
     }
   });
 
-  // Handle disconnection
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);
-    for (let userId in connectedUsers) {
-      if (connectedUsers[userId] === socket.id) {
-        delete connectedUsers[userId];
-        break;
-      }
-    }
+    Object.keys(connectedUsers).forEach((userId) => {
+      if (connectedUsers[userId] === socket.id) delete connectedUsers[userId];
+    });
   });
 });
 
-// 2. Firebase Push Notification Function
+// Send Firebase Push Notification
 async function sendPushNotification(userId, message) {
-  // Fetch user's FCM token from your database (e.g., MongoDB, Firebase Firestore, etc.)
   const userToken = await getUserToken(userId);
-
   if (userToken) {
-    const payload = {
-      notification: {
-        title: "New Message",
-        body: message
-      }
-    };
-
     try {
-      await admin.messaging().sendToDevice(userToken, payload);
+      await admin.messaging().sendToDevice(userToken, {
+        notification: { title: "New Message", body: message }
+      });
       console.log("Push notification sent successfully");
     } catch (error) {
       console.error("Error sending push notification:", error);
@@ -131,17 +100,12 @@ async function sendPushNotification(userId, message) {
   }
 }
 
-// Mock function to get the user's FCM token (replace this with actual DB logic)
+// Mock function to get FCM token
 async function getUserToken(userId) {
-  // Implement your logic to retrieve the FCM token for the user from your database
-  return "user-fcm-token";
+  return "user-fcm-token"; // Replace with real DB query
 }
-
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "build", "index.html"));
-});
 
 // Start HTTPS server
 server.listen(PORT, () => {
-  console.log(`HTTPS server running on port ${PORT}`);
+  console.log(`Server running on HTTPS port ${PORT}`);
 });
