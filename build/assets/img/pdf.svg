@@ -1,9 +1,0 @@
-<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68 68" width="68" height="68">
-	<title>Screenshot_140</title>
-	<defs>
-		<image  width="68" height="68" id="img1" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAABECAMAAAAPzWOAAAAAAXNSR0IB2cksfwAAAL1QTFRFvr6+zs7O4ODg3t7eycnJ5+fn5eXl1dXV1tbW8vLy8PDw0NDQ2tra8/Pz4uLi0dHR5OTk9vb24eHhwsLCyMjIy8vLzMzMysrKxMTEv7+/w8PD8fHx19fX6urq9/f3z8/P6enp+fn5+/v7/f399PT02NjYwMDA1NTU7Ozs/Pz8/v7+0tLS9fX17e3t+Pj429vb+vr609PT5ubmzc3NxcXF4+Pj39/fwcHB3Nzc7u7u6+vr7+/v6Ojox8fH3d3dtkwTqQAAASRJREFUeJzt0s9Lg2AYB/D3O5WF2Go62ixql8R2iE516/9npyiIhe2ysZwzR6QTc/5K6ZrQ66Iuz/f0wvO8H/jCA/YLASGEEEIIIf+LoAwrWkC8A7JXKcjELNwNkUrFT2vmNYgGvKllDUdHVrC13EH1TmwuZAhs21WHdc/tsiIL+kBRCI98SK4Iz6mc5YpeQtAsE55zGViciLi4Yg9nXiTLiegPbAmd/nz1/XI9sjEwvplog1UaeaZ63wzB4rpCDnzd8szeXTNEUya4cNxTzPJREjasIy2PguREUMP0abTvTxshOExF9urFTDtGa/YxjIJEkriRdyO3Y81i+rbNWGl1p+fzJS+iqPG45s+fIrfuS2jU3OePEb4QQgghhBBCCCGEfOUTG1B0RQx+F9wAAAAASUVORK5CYII="/>
-	</defs>
-	<style>
-	</style>
-	<use id="Background" href="#img1" x="0" y="0"/>
-</svg>
