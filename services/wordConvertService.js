@@ -1,7 +1,8 @@
-const pdf = require("html-pdf");
+const puppeteer = require("puppeteer");
 const fs = require("fs");
 const moment = require("moment");
 const path = require("path");
+const jsPDF = require("jspdf").jsPDF; // Using CommonJS syntax
 
 const outputPath = "public/uploads/documents/";
 
@@ -20,17 +21,18 @@ function generateHtmlContent(htmlTemplate, replacements) {
   return content;
 }
 
-// Helper function to create the PDF file
+// Helper function to create the PDF file using Puppeteer
 async function createPdf(content, fileName) {
-  return new Promise((resolve, reject) => {
-    pdf.create(content, { format: "A4" }).toFile(outputPath + fileName, (err, res) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve("/uploads/documents/" + fileName);
-      }
-    });
-  });
+  try {
+    const doc = new jsPDF();
+    doc.text(content, 10, 10);
+    doc.save(outputPath + fileName);
+    console.log('PDF generated successfully');
+    return "/uploads/documents/" + fileName;
+  } catch (error) {
+    console.error('Error fetching URL:', error);
+    return null
+  }
 }
 
 async function convertHtmlToPdf(formData, selectedTicket) {
