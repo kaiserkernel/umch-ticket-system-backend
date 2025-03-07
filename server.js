@@ -23,8 +23,10 @@ const corsOptions = {
     "http://ticket-system.umch.de:3000",
     "http://5.132.162.20:3000"
   ],
+  // origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,  // Allow sending cookies and Authorization headers
 };
 
 // Load SSL Certificates
@@ -109,3 +111,6 @@ async function getUserToken(userId) {
 server.listen(PORT, () => {
   console.log(`Server running on HTTPS port ${PORT}`);
 });
+// app.listen(PORT, () => {
+//   console.log(`Server running on HTTPS port ${PORT}`);
+// });

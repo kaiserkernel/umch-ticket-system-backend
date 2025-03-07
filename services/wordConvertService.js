@@ -24,9 +24,32 @@ function generateHtmlContent(htmlTemplate, replacements) {
 // Helper function to create the PDF file using Puppeteer
 async function createPdf(content, fileName) {
   try {
-    const doc = new jsPDF();
-    doc.text(content, 10, 10);
-    doc.save(outputPath + fileName);
+    // Ensure the directory exists
+    if (!fs.existsSync(outputPath)) {
+      fs.mkdirSync(outputPath, { recursive: true });
+    }
+
+    // Ensure the file name includes the .pdf extension if not present
+    if (!fileName.endsWith(".pdf")) {
+      fileName += ".pdf";
+    }
+
+    const _outputPath = path.join(outputPath, fileName);
+
+    const browser = await puppeteer.launch({
+      executablePath: '/home/node/.cache/puppeteer/chrome/linux-131.0.6778.204/chrome-linux64/chrome',
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+
+    const page = await browser.newPage();
+    await page.setContent(content);
+
+    // Generate and save the PDF at the correct file path
+    await page.pdf({ path: _outputPath, format: "A4" });
+
+    await browser.close();
+
     console.log('PDF generated successfully');
     return "/uploads/documents/" + fileName;
   } catch (error) {
